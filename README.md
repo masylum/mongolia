@@ -4,6 +4,4 @@
 
 ## Dependencies
 
-  npm:
-
     $ npm install class
