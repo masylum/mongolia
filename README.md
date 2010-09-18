@@ -1,9 +1,9 @@
 # Mongolia
 
-    Lightweight, fast, flexible models using MongoDB.
+  Lightweight, fast, flexible models using MongoDB.
 
 ## Dependencies
 
-npm:
+  npm:
 
     $ npm install class
