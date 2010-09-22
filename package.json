@@ -1,0 +1,10 @@
+{
+  "name": "Mongolia",
+  "description": "Mongodb client wrapper. Acts as model.",
+  "version": "0.0.1",
+  "author": "Pau Ramon <masylum@gmail.com>",
+  "keywords": ["mongo", "mongodb", "orm", "database", "db"],
+  "main": "./lib/rapid",
+  "dependencies": { "mongodb": ">= 0.8.0 },
+  "engines": { "node": ">= 0.2.0" }
+}
