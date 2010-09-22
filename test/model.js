@@ -41,9 +41,9 @@ var load_user = function(callback){
   });
 }
 
-var remove_users = function(callback){
+var remove_users = function(){
   db.collection('users', function(error, collection) {
-    collection.remove({}, callback);
+    collection.remove({}, function(error, bla){});
   });
 }
 
@@ -114,13 +114,63 @@ db.open(function(){
       element.foo = 'bar';
     };
 
+    User.afterCreate = function(element){
+      element._id = 'forlayo';
+    };
+
     User.mongoCall('insert', {name: 'Zemba'}, function(error, docs){
-      assert.eql(docs, {name: 'Zemba', foo: 'bar'});
+      assert.equal(docs[0].name, 'Zemba');
+      assert.equal(docs[0].foo, 'bar');
+      assert.equal(docs[0]._id, 'forlayo');
+      ++n;
+    });
+
+    User.mongoCall('insert', [{name: 'Zemba'}, {name: 'Fleiba'}], function(error, docs){
+      assert.equal(docs[0].name, 'Zemba');
+      assert.equal(docs[0].foo, 'bar');
+      assert.equal(docs[0]._id, 'forlayo');
+      assert.equal(docs[1].name, 'Fleiba');
+      assert.equal(docs[1].foo, 'bar');
+      assert.equal(docs[1]._id, 'forlayo');
       ++n;
     });
 
     beforeExit(function(){
-      assert.equal(1, n, 'All tests are run');
+      assert.equal(2, n, 'All tests are run');
+      remove_users();
+    });
+  };
+
+  exports['test insert'] = function(assert, beforeExit){
+    var n = 0;
+
+    User.onCreate = function(element){
+      element.foo = 'bar';
+    };
+
+    User.afterCreate = function(element){
+      element._id = 'forlayo';
+    };
+
+    User.mongoCall('insert', {name: 'Zemba'}, function(error, docs){
+      assert.equal(docs[0].name, 'Zemba');
+      assert.equal(docs[0].foo, 'bar');
+      assert.equal(docs[0]._id, 'forlayo');
+      ++n;
+    });
+
+    User.mongoCall('insert', [{name: 'Zemba'}, {name: 'Fleiba'}], function(error, docs){
+      assert.equal(docs[0].name, 'Zemba');
+      assert.equal(docs[0].foo, 'bar');
+      assert.equal(docs[0]._id, 'forlayo');
+      assert.equal(docs[1].name, 'Fleiba');
+      assert.equal(docs[1].foo, 'bar');
+      assert.equal(docs[1]._id, 'forlayo');
+      ++n;
+    });
+
+    beforeExit(function(){
+      assert.equal(2, n, 'All tests are run');
       remove_users();
     });
   };
