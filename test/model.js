@@ -33,13 +33,18 @@ var inspect= require('eyes').inspector({
 });
 
 var load_user = function(callback){
-    db.collection('users', function(error, collection) {
-      error && inspect(error.stack);
-      collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function(error, doc){
-        callback(doc);
-        collection.remove({}, function(error, bla){});
-      });
+  db.collection('users', function(error, collection) {
+    collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function(error, doc){
+      callback(doc);
+      collection.remove({}, function(error, bla){});
     });
+  });
+}
+
+var remove_users = function(callback){
+  db.collection('users', function(error, collection) {
+    collection.remove({}, callback);
+  });
 }
 
 db.open(function(){
@@ -77,6 +82,7 @@ db.open(function(){
   exports['test find'] = function(assert, beforeExit){
     load_user(function(user){
       var n = 0;
+
       User.mongoCall('find', {}, function(error, cursor){
         assert.eql(cursor.selector, {});
         assert.equal(cursor.queryRun, false);
@@ -98,6 +104,24 @@ db.open(function(){
       beforeExit(function(){
         assert.equal(3, n, 'All tests are run');
       });
+    });
+  };
+
+  exports['test insert'] = function(assert, beforeExit){
+    var n = 0;
+
+    User.onCreate = function(element){
+      element.foo = 'bar';
+    };
+
+    User.mongoCall('insert', {name: 'Zemba'}, function(error, docs){
+      assert.eql(docs, {name: 'Zemba', foo: 'bar'});
+      ++n;
+    });
+
+    beforeExit(function(){
+      assert.equal(1, n, 'All tests are run');
+      remove_users();
     });
   };
 });
