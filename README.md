@@ -3,6 +3,7 @@
 Lightweight, fast, flexible models using MongoDB.
 
 Mongolia contains two modules:
+
   * Model: An object representing a collection with some wrappers/hooks of MongoDB calls.
   * Validator: An object that validates MongoDB documents and returns errors if found.
 
@@ -29,11 +30,13 @@ All the collection.js functions from the driver are supported.
 If you need more information visit the official driver http://github.com/christkv/node-mongodb-native.
 
 ## Custom MongoDB functions
+
   * *findArray*: find() + toArray().
   * *mapReduceArray*: mapReduce that returns an array with the results.
   * *mapReduceCursor*: mapReduce that returns a cursor.
 
 ## Wrapped functions with hooks
+
   * *insert*: insert() + trigger onCreate() and afterCreate() hooks.
   * *update*: update() + trigger onUpdate() and afterUpdate() hooks.
   * *findAndModify*: findAndModify() + trigger onUpdate() and afterUpdate() hooks.
@@ -58,7 +61,7 @@ If you need more information visit the official driver http://github.com/christk
 Mongolia helps you denormalizing your MongoDB database.
 You can define _skeletons_ for your embedded documents. Those _skeletons_ define which data do you want to denormalize.
 
-  setEmbedObject(name, object);
+    setEmbedObject(name, object);
 
 Example
 
@@ -194,40 +197,40 @@ Adds an error to your validator
 
 Example using some of the validator features:
 
-var User = Model.extend({
-  constructor: function (db) {
-    Model.call(this, db, 'users');
-  },
+    var User = Model.extend({
+      constructor: function (db) {
+        Model.call(this, db, 'users');
+      },
 
-  validate: function (user, data, callback) {
-    var validator = $.model('validator', [user, data]);
+      validate: function (user, data, callback) {
+        var validator = $.model('validator', [user, data]);
 
-    validator.validateRegex({
-      name: [validator.regex.username, 'Incorrect name'],
-      email: [validator.regex.email, 'Incorrect email'],
-      password: [validator.regex.password, 'Incorrect password'],
-      description: [validator.regex.description, 'Incorrect description']
+        validator.validateRegex({
+          name: [validator.regex.username, 'Incorrect name'],
+          email: [validator.regex.email, 'Incorrect email'],
+          password: [validator.regex.password, 'Incorrect password'],
+          description: [validator.regex.description, 'Incorrect description']
+        });
+
+        if (validator.attrChanged('password')) {
+          validator.validateConfirmation({
+            'password': ['password_confirmation', 'Passwords must match']
+          });
+        }
+
+        if (!data.tags || data.tags.length <= 0) {
+          validator.addError('tags', 'Select at least one tag');
+        }
+
+        if (validator.isUpdating()) {
+          validator.validateQuery({
+            name: [this, {name: data.name}, false, 'There is already a user with this name'],
+            email: [this, {email: data.email}, false, 'There is already a user with this email']
+          }, function () {
+            callback(null, validator);
+          });
+        } else {
+          callback(null, validator);
+        }
+      }
     });
-
-    if (validator.attrChanged('password')) {
-      validator.validateConfirmation({
-        'password': ['password_confirmation', 'Passwords must match']
-      });
-    }
-
-    if (!data.tags || data.tags.length <= 0) {
-      validator.addError('tags', 'Select at least one tag');
-    }
-
-    if (validator.isUpdating()) {
-      validator.validateQuery({
-        name: [this, {name: data.name}, false, 'There is already a user with this name'],
-        email: [this, {email: data.email}, false, 'There is already a user with this email']
-      }, function () {
-        callback(null, validator);
-      });
-    } else {
-      callback(null, validator);
-    }
-  }
-});
