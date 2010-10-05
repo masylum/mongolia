@@ -2,7 +2,7 @@
  * Module dependencies.
  */
 
-var Model = require('./../model'),
+var Model = require('./../lib/model'),
     Server = require('mongodb/connection').Server,
     Db = require('mongodb/db').Db,
     db = new Db('mongolia_test', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {});
@@ -16,126 +16,126 @@ var UserClass = Model.extend({
 });
 var User = new UserClass(db);
 
-var inspect= require('eyes').inspector({
-  styles: {                 // Styles applied to stdout
-      all:     'yellow',    // Overall style applied to everything
-      label:   'underline', // Inspection labels, like 'array' in `array: [1, 2, 3]`
-      other:   'inverted',  // Objects which don't have a literal representation, such as functions
-      key:     'bold',      // The keys in object literals, like 'a' in `{a: 1}`
+var inspect = require('eyes').inspector({
+  styles: {
+    all:     'yellow',
+    label:   'underline',
+    other:   'inverted',
+    key:     'bold',
 
-      special: 'grey',      // null, undefined...
-      string:  'green',
-      number:  'red',
-      bool:    'blue',      // true false
-      regexp:  'green',     // /\d+/
+    special: 'grey',
+    string:  'green',
+    number:  'red',
+    bool:    'blue',
+    regexp:  'green'
   },
   maxLength: 9999999999
 });
 
-var load_user = function(callback){
-  db.collection('users', function(error, collection) {
-    collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function(error, doc){
+var load_user = function (callback) {
+  db.collection('users', function (error, collection) {
+    collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function (error, doc) {
       callback(doc);
-      collection.remove({}, function(error, bla){});
+      collection.remove({}, function (error, bla) {});
     });
   });
 }
 
-var remove_users = function(){
-  db.collection('users', function(error, collection) {
-    collection.remove({}, function(error, bla){});
+var remove_users = function () {
+  db.collection('users', function (error, collection) {
+    collection.remove({}, function (error, bla) {});
   });
 }
 
-db.open(function(){
-  exports['test get collection'] = function(assert){
-    User.getCollection(function(error, collection){
+db.open(function () {
+  module.exports['test get collection'] = function (assert) {
+    User.getCollection(function (error, collection) {
       assert.equal(error, null);
       assert.equal(collection.collectionName, 'users');
     });
   };
 
-   exports['test find Array'] = function(assert, beforeExit){
-     load_user(function(user){
-       var n = 0;
-       User.mongoCall('findArray', {}, function(error, doc){
-         assert.eql(doc, user);
-         ++n;
-       });
-
-       User.mongoCall('findArray', {name: 'Pau'}, function(error, doc){
-         assert.eql(doc, user);
-         ++n;
-       });
-
-       User.mongoCall('findArray', {name: 'Zemba'}, function(error, doc){
-         assert.eql(doc, []);
-         ++n;
-       });
-
-       beforeExit(function(){
-         assert.equal(3, n, 'All tests are run');
-       });
-     });
-   };
-
-  exports['test find'] = function(assert, beforeExit){
-    load_user(function(user){
+  module.exports['test find Array'] = function (assert, beforeExit) {
+    load_user(function (user) {
       var n = 0;
-
-      User.mongoCall('find', {}, function(error, cursor){
-        assert.eql(cursor.selector, {});
-        assert.equal(cursor.queryRun, false);
-        ++n;
+      User.mongoCall('findArray', {}, function (error, doc) {
+        assert.eql(doc, user);
+        n += 1;
       });
 
-      User.mongoCall('find', {name: 'Pau'}, function(error, cursor){
-        assert.eql(cursor.selector, {name: 'Pau'});
-        assert.equal(cursor.queryRun, false);
-        ++n;
+      User.mongoCall('findArray', {name: 'Pau'}, function (error, doc) {
+        assert.eql(doc, user);
+        n += 1;
       });
 
-      User.mongoCall('find', {name: 'Zemba'}, function(error, cursor){
-        assert.eql(cursor.selector, {name: 'Zemba'});
-        assert.equal(cursor.queryRun, false);
-        ++n;
+      User.mongoCall('findArray', {name: 'Zemba'}, function (error, doc) {
+        assert.eql(doc, []);
+        n += 1;
       });
 
-      beforeExit(function(){
+      beforeExit(function () {
         assert.equal(3, n, 'All tests are run');
       });
     });
   };
 
-  exports['test insert'] = function(assert, beforeExit){
+  module.exports['test find'] = function (assert, beforeExit) {
+    load_user(function (user) {
+      var n = 0;
+
+      User.mongoCall('find', {}, function (error, cursor) {
+        assert.eql(cursor.selector, {});
+        assert.equal(cursor.queryRun, false);
+        n += 1;
+      });
+
+      User.mongoCall('find', {name: 'Pau'}, function (error, cursor) {
+        assert.eql(cursor.selector, {name: 'Pau'});
+        assert.equal(cursor.queryRun, false);
+        n += 1;
+      });
+
+      User.mongoCall('find', {name: 'Zemba'}, function (error, cursor) {
+        assert.eql(cursor.selector, {name: 'Zemba'});
+        assert.equal(cursor.queryRun, false);
+        n += 1;
+      });
+
+      beforeExit(function () {
+        assert.equal(3, n, 'All tests are run');
+      });
+    });
+  };
+
+  module.exports['test insert'] = function (assert, beforeExit) {
     var n = 0;
 
-    User.onCreate = function(element){
+    User.onCreate = function (element) {
       element.foo = 'bar';
     };
 
-    User.afterCreate = function(element){
+    User.afterCreate = function (element) {
       element._id = 'forlayo';
     };
 
-    User.mongoCall('insert', {name: 'Zemba'}, function(error, docs){
+    User.mongoCall('insert', {name: 'Zemba'}, function (error, docs) {
       assert.equal(docs[0].name, 'Zemba');
       assert.equal(docs[0].foo, 'bar');
       assert.equal(docs[0]._id, 'forlayo');
-      ++n;
+      n += 1;
     });
 
-    User.mongoCall('insert', [{name: 'Zemba'}, {name: 'Fleiba'}], function(error, docs){
+    User.mongoCall('insert', [{name: 'Zemba'}, {name: 'Fleiba'}], function (error, docs) {
       assert.equal(docs[0].name, 'Zemba');
       assert.equal(docs[0].foo, 'bar');
       assert.equal(docs[0]._id, 'forlayo');
       assert.equal(docs[1].name, 'Fleiba');
       assert.equal(docs[1].foo, 'bar');
       assert.equal(docs[1]._id, 'forlayo');
-      ++n;
+      n += 1;
     });
 
-    beforeExit(function(){
+    beforeExit(function () {
       assert.equal(2, n, 'All tests are run');
       remove_users();
     });
