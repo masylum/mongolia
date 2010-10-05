@@ -31,15 +31,17 @@ If you need more information visit the official driver http://github.com/christk
 
 ## Custom MongoDB functions
 
-  * *findArray*: find() + toArray().
-  * *mapReduceArray*: mapReduce that returns an array with the results.
-  * *mapReduceCursor*: mapReduce that returns a cursor.
+  * findArray: find + toArray.
+  * mapReduceArray: mapReduce that returns an array with the results.
+  * mapReduceCursor: mapReduce that returns a cursor.
 
 ## Wrapped functions with hooks
 
-  * *insert*: insert() + trigger onCreate() and afterCreate() hooks.
-  * *update*: update() + trigger onUpdate() and afterUpdate() hooks.
-  * *findAndModify*: findAndModify() + trigger onUpdate() and afterUpdate() hooks.
+  * insert: insert + trigger onCreate and afterCreate hooks.
+  * update: update + trigger onUpdate and afterUpdate hooks.
+  * findAndModify: findAndModify + trigger onUpdate and afterUpdate hooks.
+
+Example:
 
     var Comment = require('model').extend({
       constructor: function (db) {
@@ -63,7 +65,7 @@ You can define _skeletons_ for your embedded documents. Those _skeletons_ define
 
     setEmbedObject(name, object);
 
-Example
+Example:
 
     var Post = require('model').extend({
       constructor: function (db) {
