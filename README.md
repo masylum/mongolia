@@ -2,6 +2,10 @@
 
 Lightweight, fast, flexible models using MongoDB.
 
+## Install
+
+    $ npm install mongolia
+
 Mongolia contains two modules:
 
   * Model: An object representing a collection with some wrappers/hooks of MongoDB calls.
