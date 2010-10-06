@@ -10,7 +10,7 @@ Mongolia contains two modules:
 ## Dependencies
 
     $ npm install class
-    $ npm install funk // still not available
+    $ npm install funk
 
 # Model
 
