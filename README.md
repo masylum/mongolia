@@ -173,7 +173,11 @@ Returns true if the attributed changed
 
     attrChanged(attr)
 
-Returns true if the attributed failed a validation
+Adds an error to your validator. Accept dot notation to add nested errors.
+
+    addError(field, value)
+
+Returns true if the attributed failed a validation. Accept dot notation to check nested errors.
 
     hasError(field)
 
@@ -196,10 +200,6 @@ It fills your validator with errors if any of the elements fail the confirmation
 It fills your validator with errors if any of the queries fail (good to avoid duplicated data)
 
     validateQuery(validations, callback)
-
-Adds an error to your validator
-
-    addError(name, value)
 
 Example using some of the validator features:
 
