@@ -1,6 +1,8 @@
 # Mongolia
 
-Lightweight, fast, flexible models using MongoDB.
+Flexible wrapper for the nodejs MongoDB driver.
+Its not a ORM, but it can be used to handle the logic of your models.
+No magic, no pain.
 
 ## Install
 
