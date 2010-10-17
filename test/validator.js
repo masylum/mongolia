@@ -2,6 +2,22 @@
  * Module dependencies.
  */
 
+GLOBAL.inspect = require('eyes').inspector({
+  styles: {
+    all:     'yellow',
+    label:   'underline',
+    other:   'inverted',
+    key:     'bold',
+
+    special: 'grey',
+    string:  'green',
+    number:  'red',
+    bool:    'blue',
+    regexp:  'green'
+  },
+  maxLength: 9999999999
+});
+
 var validator = require('./../lib/validator');
 
 module.exports['test initial status'] = function (assert) {
@@ -61,6 +77,13 @@ module.exports['test hasError'] = function (assert) {
   val.addError('foo.zemba', 'foo error');
 
   assert.equal(val.hasError('foo.zemba'), true);
+};
+
+module.exports['test hasError and hasErrors'] = function (assert) {
+  var val = validator({}, {foo: 'bar'});
+
+  assert.equal(val.hasError('foo.zemba'), false);
+  assert.equal(val.hasErrors(), false);
 };
 
 // multiple errors per field
