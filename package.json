@@ -1,11 +1,11 @@
 {
   "name": "mongolia",
   "description": "Mongodb driver wrapper. Acts as model.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Pau Ramon <masylum@gmail.com>",
   "keywords": ["mongo", "mongodb", "orm", "database", "db"],
   "main": "./lib/model",
-  "dependencies": { "mongodb": ">=0.7.9", "funk": "0.0.1", "class": "0.3.0"}
+  "dependencies": { "mongodb": ">=0.7.9", "funk": "0.0.1", "class": "0.3.0"},
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.2.0" }
 }
