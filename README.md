@@ -66,7 +66,6 @@ You can define _skeletons_ for your embedded documents.
 Those _skeletons_ define which data do you want to denormalize.
 
 ### setEmbedObject
-
 Returns a denormalized and filtered embed object.
 
     setEmbedObject(name, object);
@@ -88,7 +87,6 @@ Example:
     Post.setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
 
 ### updateEmbedObject
-
 Updates an embed object. Plays really well with the update hooks.
 
     updateEmbedObject(model, data, name, options, callback);
@@ -109,7 +107,6 @@ Example:
     });
 
 ### pushEmbedObject
-
 Pushes an embed object. Plays really well with the insert hooks.
 
     pushEmbedObject(model, data, name, options, callback);
