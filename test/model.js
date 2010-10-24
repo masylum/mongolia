@@ -7,8 +7,6 @@ var Model = require('./../lib/model'),
     Db = require('mongodb/db').Db,
     db = new Db('mongolia_test', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {});
 
-require('ext');
-
 var UserClass = Model.extend({
   constructor: function (db) {
     Model.call(this, db, 'users');
