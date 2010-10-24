@@ -8,15 +8,10 @@ No magic, no pain.
 
     $ npm install mongolia
 
-Mongolia contains two modules:
+Mongolia contains two independent modules:
 
   * Model: An object representing a collection with some wrappers/hooks of MongoDB calls.
   * Validator: An object that validates MongoDB documents and returns errors if found.
-
-## Dependencies
-
-    $ npm install class
-    $ npm install funk
 
 # Model
 
@@ -43,9 +38,9 @@ If you need more information visit the official driver http://github.com/christk
 
 ## Wrapped functions with hooks
 
-  * insert: insert + trigger onCreate and afterCreate hooks.
-  * update: update + trigger onUpdate and afterUpdate hooks.
-  * findAndModify: findAndModify + trigger onUpdate and afterUpdate hooks.
+  * insert: triggers onCreate and afterCreate hooks.
+  * update: triggers onUpdate and afterUpdate hooks.
+  * findAndModify: triggers onUpdate and afterUpdate hooks.
 
 Example:
 
@@ -64,10 +59,15 @@ Example:
       }
     });
 
-## Work with embed documents
+## Working with embedded documents
 
-Mongolia helps you denormalizing your MongoDB database.
-You can define _skeletons_ for your embedded documents. Those _skeletons_ define which data do you want to denormalize.
+Mongolia helps you to denormalizing your MongoDB database.
+You can define _skeletons_ for your embedded documents.
+Those _skeletons_ define which data do you want to denormalize.
+
+### setEmbedObject
+
+Returns a denormalized and filtered embed object.
 
     setEmbedObject(name, object);
 
@@ -87,25 +87,44 @@ Example:
     var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
     Post.setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
 
-Sometimes we change an object and we have to reflect this change to other collections that store it denormalized.
+### updateEmbedObject
 
-    updateEmbedObject(model, data, embed, options, callback);
+Updates an embed object. Plays really well with the update hooks.
 
-Example:
-
-    Author.updateEmbedObject(element, update, 'post', null, function (error, doc) {
-      // usually, do nothing
-    });
-
-The third common cause is just to push a object in a denormalized array
-
-    pushEmbedObject(model, data, embed, options, callback);
+    updateEmbedObject(model, data, name, options, callback);
 
 Example:
 
-    Comment.pushEmbedObject(element, update, 'post', null, function (error, doc) {
-      // usually, do nothing
+    var Post = require('model').extend({
+      constructor: function (db) {
+        Model.call(this, db, 'comments');
+      },
+
+      afterUpdate: function (element, update) {
+        Author.updateEmbedObject(element, update, 'post', null, function (error, doc) {
+          // Author.post updated!
+        });
+      }
+
     });
+
+### pushEmbedObject
+
+Pushes an embed object. Plays really well with the insert hooks.
+
+    pushEmbedObject(model, data, name, options, callback);
+
+Example:
+
+    var Post = require('model').extend({
+      constructor: function (db) {
+        Model.call(this, db, 'comments');
+      },
+
+      afterInsert: function (element) {
+        Author.pushEmbedObject(element.author, update, 'posts', null, function (error, doc) {
+          // Author.posts[] now contains this post
+        });
 
 
 ## Create and update instances
