@@ -1,4 +1,13 @@
-# Mongolia
+ooo        ooooo                                            oooo   o8o
+`88.       .888'                                            `888   `"'
+ 888b     d'888   .ooooo.  ooo. .oo.    .oooooooo  .ooooo.   888  oooo   .oooo.
+ 8 Y88. .P  888  d88' `88b `888P"Y88b  888' `88b  d88' `88b  888  `888  `P  )88b
+ 8  `888'   888  888   888  888   888  888   888  888   888  888   888   .oP"888
+ 8    Y     888  888   888  888   888  `88bod8P'  888   888  888   888  d8(  888
+o8o        o888o `Y8bod8P' o888o o888o `8oooooo.  `Y8bod8P' o888o o888o `Y888""8o
+                                       d"     YD
+                                       "Y88888P'
+
 
 Flexible wrapper for the nodejs MongoDB driver.
 Its not a ORM, but it can be used to handle the logic of your models.
