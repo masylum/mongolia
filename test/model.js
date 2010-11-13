@@ -7,43 +7,28 @@ var Model = require('./../lib/model'),
     Db = require('mongodb/db').Db,
     db = new Db('mongolia_test', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {});
 
-var UserClass = Model.extend({
-  constructor: function (db) {
-    Model.call(this, db, 'users');
-  }
-});
-var User = new UserClass(db);
+var UserClass = function (db) {
+      var user = Model(db, 'users');
+      return user;
+    },
 
-var inspect = require('eyes').inspector({
-  styles: {
-    all:     'yellow',
-    label:   'underline',
-    other:   'inverted',
-    key:     'bold',
+    User = UserClass(db),
 
-    special: 'grey',
-    string:  'green',
-    number:  'red',
-    bool:    'blue',
-    regexp:  'green'
-  },
-  maxLength: 9999999999
-});
+    load_user = function (callback) {
+      db.collection('users', function (error, collection) {
+        collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function (error, doc) {
+          callback(doc);
+          collection.remove({}, function (error, bla) {});
+        });
+      });
+    },
 
-var load_user = function (callback) {
-  db.collection('users', function (error, collection) {
-    collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function (error, doc) {
-      callback(doc);
-      collection.remove({}, function (error, bla) {});
-    });
-  });
-}
+    remove_users = function () {
+      db.collection('users', function (error, collection) {
+        collection.remove({}, function (error, bla) {});
+      });
+    };
 
-var remove_users = function () {
-  db.collection('users', function (error, collection) {
-    collection.remove({}, function (error, bla) {});
-  });
-}
 
 db.open(function () {
   module.exports['test get collection'] = function (assert) {

@@ -1,12 +1,10 @@
-var Model= require('./../model');
+var Model = require('./../model');
 
-var User = Model.extend({
-  constructor: function (db) {
-    Model.call(this, db, 'users');
-  },
+module.exports = function (db) {
+  var user = Model(db, 'users');
 
-  validate: function (user, data, callback) {
-    var validator= $.model('validator', [user, data]);
+  user.validate = function (user, data, callback) {
+    var validator = $.model('validator', [user, data]);
 
     validator.validateRegex({
       name: [validator.regex.username, 'Incorrect name'],
@@ -15,13 +13,13 @@ var User = Model.extend({
       description: [validator.regex.description, 'Incorrect description']
     });
 
-    if(validator.attrChanged('password')) {
+    if (validator.attrChanged('password')) {
       validator.validateConfirmation({
         'password': ['password_confirmation', 'Passwords must match']
       });
     }
 
-    if(!data.tags || data.tags.length <= 0) {
+    if (!data.tags || data.tags.length <= 0) {
       validator.addError('tags', 'Select at least one tag');
     }
 
@@ -31,7 +29,7 @@ var User = Model.extend({
     }, function () {
       callback(null, validator);
     });
-  }
-});
+  };
 
-module.exports = User;
+  return user;
+};
