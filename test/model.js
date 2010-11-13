@@ -7,12 +7,12 @@ var Model = require('./../lib/model'),
     Db = require('mongodb/db').Db,
     db = new Db('mongolia_test', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {});
 
-var UserClass = function (db) {
+var User = function (db) {
       var user = Model(db, 'users');
       return user;
     },
 
-    User = UserClass(db),
+    User = User(db),
 
     load_user = function (callback) {
       db.collection('users', function (error, collection) {

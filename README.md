@@ -26,15 +26,22 @@ Mongolia contains two independent modules:
 
 Each model has a colection name and a reference to the database.
 
-    var User = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'users');
-      }
-    });
+Models don't map data from MongoDB, they are just a layer to centralize all the logic.
+
+    var Model = require('model');
+
+    var User = function (db) {
+      var user = Model(db, 'users');
+
+      // implement some user logic
+
+      return user;
+    };
 
 Calls to the database are done using the function mongoCall.
 
-    User->mongoCall('function', args, callback);
+    var User = User(db);
+    User.mongoCall('function', args, callback);
 
 All the collection.js functions from the driver are supported.
 If you need more information visit the official driver http://github.com/christkv/node-mongodb-native.
@@ -53,20 +60,20 @@ If you need more information visit the official driver http://github.com/christk
 
 Example:
 
-    var Comment = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'comments');
-      },
+    var Comment = function (db) {
+      var comment = Model(db, 'comments');
 
-      onCreate: function (element) {
+      comment.onCreate = function (element) {
         element.created_at = new Date();
-      },
+      };
 
-      aterCreate: function (element) {
-        var Post = require('./models/post')(this.db);
-        Post.mongoCall('update', {_id: element.post_id}, {'$inc': {num_posts: 1}});
-      }
-    });
+      comment.atferCreate = function (element) {
+        var post = require('./models/post')(this.db);
+        post.mongoCall('update', {_id: element.post_id}, {'$inc': {num_posts: 1}});
+      };
+
+      return comment;
+    };
 
 ## Working with embedded documents
 
@@ -81,19 +88,19 @@ Returns a denormalized and filtered embed object.
 
 Example:
 
-    var Post = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'comments');
-      },
+    var Post = function (db) {
+      var post = Model(db, 'posts');
 
       // only embed the comment's title
-      this.skeletons= {
+      post.skeletons= {
         comment: ['_id', 'title']
       };
-    });
+
+      return post;
+    };
 
     var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
-    Post.setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
+    Post(db).setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
 
 ### updateEmbedObject
 Updates an embed object. Plays really well with the update hooks.
@@ -102,18 +109,17 @@ Updates an embed object. Plays really well with the update hooks.
 
 Example:
 
-    var Post = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'comments');
-      },
+    var Post = function (db) {
+      var post = Model(db, 'posts');
 
-      afterUpdate: function (element, update) {
-        Author.updateEmbedObject(element, update, 'post', null, function (error, doc) {
+      post.afterUpdate = function (element, update) {
+        Author(db).updateEmbedObject(element, update, 'post', null, function (error, doc) {
           // Author.post updated!
         });
-      }
+      };
 
-    });
+      return post;
+    };
 
 ### pushEmbedObject
 Pushes an embed object. Plays really well with the insert hooks.
@@ -122,15 +128,17 @@ Pushes an embed object. Plays really well with the insert hooks.
 
 Example:
 
-    var Post = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'comments');
-      },
+    var Post = function (db) {
+      var post = Model(db, 'posts');
 
-      afterInsert: function (element) {
-        Author.pushEmbedObject(element.author, update, 'posts', null, function (error, doc) {
+      post.afterInsert = function (element) {
+        Author(db).pushEmbedObject(element.author, update, 'posts', null, function (error, doc) {
           // Author.posts[] now contains this post
         });
+      };
+
+      return post;
+    }
 
 
 ## Create and update instances
@@ -150,12 +158,10 @@ In order to validate an insertion/update, the model have to implement a _validat
 
 Example:
 
-    var Post = require('model').extend({
-      constructor: function (db) {
-        Model.call(this, db, 'posts');
-      },
+    var Post = function (db) {
+      var post = Model(db, 'posts');
 
-      validate: function (element, update, callback) {
+      post.validate = function (element, update, callback) {
         var validator = require('./validator');
 
         validator.validateRegex({
@@ -168,9 +174,12 @@ Example:
         }
         callback(null, validator);
       }
-    });
+
+      return post;
+    };
 
     var post = {title: 'This is a post', body: 'Lorem ipsum'};
+    var Post = Post(db);
 
     Post.createInstance(post, function (error, validator) {
       if (validator.hasErrors()) {
@@ -230,12 +239,10 @@ It fills your validator with errors if any of the queries fail (good to avoid du
 
 Example using some of the validator features:
 
-    var User = Model.extend({
-      constructor: function (db) {
-        Model.call(this, db, 'users');
-      },
+    var User = function (db) {
+      var user = Model(db, 'users');
 
-      validate: function (user, data, callback) {
+      user.validate = function (user, data, callback) {
         var validator = $.model('validator', [user, data]);
 
         validator.validateRegex({
@@ -266,4 +273,6 @@ Example using some of the validator features:
           callback(null, validator);
         }
       }
-    });
+
+      return user;
+    };
