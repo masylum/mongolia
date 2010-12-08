@@ -4,7 +4,7 @@
   "version": "0.0.4",
   "author": "Pau Ramon <masylum@gmail.com>",
   "keywords": ["mongo", "mongodb", "orm", "database", "db"],
-  "main": ".index",
+  "main": "./index",
   "dependencies": { "mongodb": ">=0.7.9", "funk": ">=0.0.1"},
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.2.0" }
