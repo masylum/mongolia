@@ -1,23 +1,3 @@
-/**
- * Module dependencies.
- */
-
-GLOBAL.inspect = require('eyes').inspector({
-  styles: {
-    all:     'yellow',
-    label:   'underline',
-    other:   'inverted',
-    key:     'bold',
-
-    special: 'grey',
-    string:  'green',
-    number:  'red',
-    bool:    'blue',
-    regexp:  'green'
-  },
-  maxLength: 9999999999
-});
-
 var validator = require('./../lib/validator');
 
 module.exports['test initial status'] = function (assert) {
@@ -100,4 +80,20 @@ module.exports['test multiple errors per field'] = function (assert) {
   val.addError('foo.bla', 'error3');
   assert.eql(val.errors.foo.zemba, ['error1', 'error2']);
   assert.eql(val.errors.foo.bla, ['error3']);
+};
+
+// isUpdating
+module.exports['test isUpdating'] = function (assert) {
+  var val = validator({}, {foo: 'bar'}),
+      val2 = validator({zemba: 'fleiba'}, {foo: 'bar'});
+  assert.equal(val.isUpdating(), false);
+  assert.equal(val2.isUpdating(), true);
+};
+
+// isInserting
+module.exports['test isInserting'] = function (assert) {
+  var val = validator({}, {foo: 'bar'}),
+      val2 = validator({zemba: 'fleiba'}, {foo: 'bar'});
+  assert.equal(val.isInserting(), true);
+  assert.equal(val2.isInserting(), false);
 };
