@@ -3,8 +3,9 @@
  */
 
 var Model = require('./../lib/model'),
-    Server = require('mongodb/connection').Server,
-    Db = require('mongodb/db').Db,
+    mongodb = require('mongodb'),
+    Db = mongodb.Db,
+    Server = mongodb.Server,
     db = new Db('mongolia_test', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {});
 
 var User = function (db) {
