@@ -17,10 +17,10 @@ var testosterone = require('testosterone')({post: 3000}),
     sys = require('sys'),
 
     load_user = function (callback) {
+      remove_users();
       db.collection('users', function (error, collection) {
         collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function (error, doc) {
           callback(doc);
-          collection.remove({}, function (error, bla) {});
         });
       });
     },
@@ -58,28 +58,23 @@ testosterone
     load_user(function (user) {
       var n = 0;
 
-      // User.mongoCall('findArray', {}, function (error, doc) {
-      //   console.log(doc);
-      //   assert.equal(doc, user);
-      //   n += 1;
-      // });
-
-      User.mongoCall('findArray', {name: 'Pau'}, function (error, doc) {
-        assert.equal(doc, user);
+      User.mongoCall('findArray', {}, function (error, doc) {
+        assert.deepEqual(doc, user);
         n += 1;
       });
 
-      // User.mongoCall('findArray', {name: 'Zemba'}, function (error, doc) {
-      //   assert.equal(doc, []);
-      //   n += 1;
-      // });
-
-      done(function () {
-        assert.equal(n, 3);
+      User.mongoCall('findArray', {name: 'Pau'}, function (error, doc) {
+        assert.deepEqual(doc, user);
+        n += 1;
       });
+
+      User.mongoCall('findArray', {name: 'Zemba'}, function (error, doc) {
+        assert.deepEqual(doc, []);
+        n += 1;
+      });
+   
     });
   })
-
 
   .run(function () {
     require('sys').print('done!');
