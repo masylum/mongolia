@@ -1,5 +1,6 @@
 var testosterone = require('testosterone')({post: 3000}),
     assert = testosterone.assert,
+    gently = global.GENTLY = new (require('gently')),
 
     Model = require('./../lib/model'),
     mongodb = require('mongodb'),
