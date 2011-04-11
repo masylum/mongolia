@@ -33,18 +33,22 @@ testosterone
   })
 
   .add('#getCollection returns a document collection', function () {
-    // gently.expect(db, 'getCollection');
-    // gently.expect(db, 'getCollection', function(collection_name, callback) {
-    //   assert.equal(collection_name, 'users');
-    // });
+    cb = function (error, collection) {};
+    gently.expect(db, 'collection', function (collection_name, callback) {
+       assert.equal(collection_name, 'users');
+       assert.equal(callback, cb);
+    });
 
-    assert.ok(typeof User.getCollection(function (error, collection) {}) === 'object');
+    User.getCollection(cb);
   })
 
   .add('#mongo proxies `collection` calls', function () {
     cb = function(error, doc) {};
 
-    gently.expect(collection_proxy, 'proxy', function(fn, collection, args, callback) {
+    gently.expect(db, 'collection', function (collection_name, callback) {
+      callback(undefined, {collectionName: 'users'});
+    });
+    gently.expect(collection_proxy, 'proxy', function (fn, collection, args, callback) {
       assert.equal(fn, 'findArray');
       assert.equal(collection.collectionName, 'users');
       assert.deepEqual(args[0], {"name":"Pau"});
