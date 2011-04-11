@@ -235,6 +235,56 @@ testosterone
     assert.ok(callback_called, 'Model#validateAndUpdate never called the callback');
   })
 
+  .add('#getEmbeddedDocument filters the document following the skeletons directive', function () {
+    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'};
+    User.skeletons = {
+      comment: ['_id', 'title']
+    };
+
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo' });
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment, 'post.comment'), { 'post.comment._id': 1, 'post.comment.title': 'foo' });
+  })
+
+  .add('#updateEmbeddedDocument updates an embedded object', function () {
+    var embeddedDocument = {},
+        opts = {},
+        cb = function () {};
+
+    gently.expect(User, 'getEmbeddedDocument', function() {
+      return embeddedDocument;
+    })
+
+    gently.expect(User, 'mongo', function (action, query, update, options, callback) {
+      assert.equal(action, 'update');
+      assert.deepEqual(query, {'author._id': 1});
+      assert.deepEqual(update, {'$set': embeddedDocument});
+      assert.equal(options, opts);
+      assert.equal(callback, cb);
+    });
+
+    User.updateEmbeddedDocument(1, 'author', {}, opts, cb);
+  })
+
+  .add('#pushEmbeddedDocument pushes an embedded object', function () {
+    var embeddedDocument = {},
+        opts = {},
+        cb = function () {};
+
+    gently.expect(User, 'getEmbeddedDocument', function() {
+      return embeddedDocument;
+    })
+
+    gently.expect(User, 'mongo', function (action, query, update, options, callback) {
+      assert.equal(action, 'update');
+      assert.deepEqual(query, {'author._id': 1});
+      assert.deepEqual(update, {'$push': embeddedDocument});
+      assert.equal(options, opts);
+      assert.equal(callback, cb);
+    });
+
+    User.pushEmbeddedDocument(1, 'author', {}, opts, cb);
+  })
+
   .run(function () {
     require('sys').print('done!');
   });
