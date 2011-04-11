@@ -2,59 +2,84 @@ var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mong
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
 
-    Collection = require('./../../lib/helpers/collection_proxy');
-    Collection.MODEL = {};
+    Collection = require('./../../lib/helpers/collection_proxy'),
+
+    _model = {};
 
 testosterone
 
-  .add('#proxy delegates every call to a function of Collection', function () {
-    var collection = {},
-      args = {},
-      cb = function () {};
+  .add('`proxy` delegates every call to a function of Collection or native driver collection', function () {
+    var coll = {foo: 'bar'},
+        cb = function () {},
+        args = ['zemba', cb];
 
-    gently.expect(Collection, 'find', function (_collection, _args, _fn, _cb) {
-      assert.equal(_collection, collection);
-      assert.equal(_args, args);
-      assert.equal(_fn, 'find');
-      assert.equal(_cb, cb);
+    ['update', 'insert', 'findArray'].forEach(function (method) {
+      gently.expect(Collection, method, function (model, collection, ar, cb) {
+        assert.equal(model, _model);
+        assert.equal(coll, collection);
+        assert.deepEqual(args, ar);
+        assert.equal(cb, cb);
+      });
+
+      Collection.proxy(_model, method, coll, args, cb);
     });
 
-    Collection.proxy('find', collection, args, cb);
+    ['find', 'foo'].forEach(function (method) {
+      gently.expect(coll, method, function (arg, callback) {
+        assert.equal(arg, args[0]);
+        assert.deepEqual(callback, args[1]);
+      });
+
+      Collection.proxy(_model, method, coll, args, cb);
+    });
   })
 
-  .add('#findArray calls find on a collection with some arguments', function () {
-    var collection = {'find': function () {}},
-      args = {},
-      cb = function () {};
+  .add('`findArray` calls find on a collection with some arguments', function () {
+    var coll = {foo: 'bar'},
+        cb = function (error, cursor) {},
+        cursor = {fleiba: 'zemba'},
+        args = ['fleiba', cb];
 
-    gently.expect(collection['find'], 'apply', function (_collection, _args) {
-      assert.equal(_collection, collection);
-      assert.equal(_args, args);
-      // TODO: Ensure this piece of code gets called.
-      // assert.equal(_args[args.length -1], function (error, cursor) {
-      //   cursor.toArray(callback);
-      // });
+    gently.expect(coll, 'find', function (ar, callback) {
+      assert.deepEqual(ar, args[0]);
+
+      // OK
+      gently.expect(cursor, 'toArray', function (callback) {
+        assert.deepEqual(callback, cb);
+      });
+      args[1](null, cursor);
+
+      // TODO: test error
     });
 
-    Collection.findArray(collection, args, 'find', cb);
+    gently.restore(Collection, 'findArray');
+    Collection.findArray(_model, coll, args, cb);
   })
 
   // TODO: Fix undefined MODEL
-  .add('#insert inserts a record', function () {
+  .add('`insert` inserts a record', function () {
+    var coll = {foo: 'bar'},
+        cb = function () {},
+        args = ['fleiba', cb];
+
     console.log("\033[0;31mPENDING: (undefined MODEL)\033[0m");
   })
 
   // TODO: Fix undefined MODEL
-  .add('#findAndModify finds and modifies a record', function () {
+  .add('`findAndModify` finds and modifies a record', function () {
+    var coll = {foo: 'bar'},
+        cb = function () {},
+        args = ['fleiba', cb];
+
     console.log("\033[0;31mPENDING: (undefined MODEL)\033[0m");
   })
 
-  .add('#mapReduceCursor calls mapReduce returning a cursor', function () {
+  .add('`mapReduceCursor` calls mapReduce returning a cursor', function () {
     var collection = {'mapReduce': function () {}},
       args = {},
       cb = function () {};
 
-    gently.expect(collection['mapReduce'], 'apply', function (_collection, _args) {
+    gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
       assert.equal(_collection, collection);
       assert.equal(_args, args);
       // TODO: Ensure this piece of code gets called.
@@ -66,7 +91,7 @@ testosterone
     Collection.mapReduceCursor(collection, args, 'whatever', cb);
   })
 
-  .add('#mapReduceArray returns a mapReduceCursor to Array', function () {
+  .add('`mapReduceArray` returns a mapReduceCursor to Array', function () {
     var collection = {'mapReduce': function () {}},
       args = {},
       cursor = {},
@@ -87,5 +112,5 @@ testosterone
   })
 
   .run(function () {
-    require('sys').print('done!');
+    // zemba
   });
