@@ -43,7 +43,7 @@ testosterone
   })
 
   .add('#mongo proxies `collection` calls', function () {
-    cb = function(error, doc) {};
+    cb = function (error, doc) {};
 
     gently.expect(db, 'collection', function (collection_name, callback) {
       callback(undefined, {collectionName: 'users'});
@@ -59,8 +59,18 @@ testosterone
   })
 
   .add('#validate validates a mongo document', function () {
-     
-  
+    document = {};
+    data = {name:'Pau'};
+    var callback_called = false;
+
+    callback = function (error, validator) {
+      callback_called = true;
+      assert.equal(error, null);
+      assert.deepEqual(validator.data, {name:'Pau'}) ;
+    };
+
+    User.validate(document, data, callback);
+    assert.ok(callback_called, 'Model#validate never called the callback');
   })
 
   .run(function () {
