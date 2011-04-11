@@ -73,6 +73,49 @@ testosterone
     assert.ok(callback_called, 'Model#validate never called the callback');
   })
 
+  .add('#validateAndInsert when the model is invalid does not insert it', function () {
+    document = {};
+    var callback_called = false,
+        cb = function (error, validator) { callback_called = true; }
+
+    gently.expect(User, 'validate', function (document, data, callback) {
+      validator = {
+        hasErrors: function () { return true; }
+      };
+      callback(null, validator);
+    });
+
+    gently.expect(User, 'mongo', 0)
+  
+    User.validateAndInsert(document, cb);
+    assert.ok(callback_called, 'Model#validateAndInsert never called the callback');
+  })
+
+  .add('#validateAndInsert when the model is valid inserts it afterwards', function () {
+    document = {};
+    var callback_called = false,
+        cb = function (error, validator) { callback_called = true; }
+
+    User.onCreate = function (document, callback) {
+      callback(null, document);
+    };
+
+    gently.expect(User, 'validate', function (document, data, callback) {
+      validator = {
+        hasErrors: function () { return false; }
+      };
+      callback(null, validator);
+    });
+
+    gently.expect(User, 'mongo', function (action, document, callback) {
+      assert.equal(action, 'insert');
+      callback(null, document);
+    });
+  
+    User.validateAndInsert(document, cb);
+    assert.ok(callback_called, 'Model#validateAndInsert never called the callback');
+  })
+
   .run(function () {
     require('sys').print('done!');
   });
