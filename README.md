@@ -9,7 +9,7 @@
                                            "Y88888P'
 
 
-Flexible wrapper for the nodejs MongoDB driver.
+Flexible wrapper for the nodejs mongoDB driver.
 Its not a ORM, but it can be used to handle the logic of your models.
 No magic, no pain.
 
@@ -19,17 +19,17 @@ No magic, no pain.
 
 Mongolia contains two independent modules:
 
-  * `Model`: An object representing a collection with some wrappers/hooks of MongoDB calls.
-  * `Validator`: An object that validates MongoDB documents and returns errors if found.
+  * `model`: An object representing a collection with some hooks of mongoDB calls.
+  * `validator`: An object that validates mongoDB documents and returns errors if found.
 
 # Model
 
 Each model has a colection name and a reference to the database.
 
-Models don't map data from MongoDB, they are just a layer to centralize all the logic.
+Models don't map data from mongoDB, they are just a layer to centralize all the logic.
 
-    var User = function (db) {
-      // our user model will do MongoDB calls using 'users' collection
+    module.exports = function (db) {
+      // our user model will do mongoDB calls using 'users' collection
       var USER = require('mongolia').model(db, 'users');
 
       // implement some user logic
@@ -37,26 +37,29 @@ Models don't map data from MongoDB, they are just a layer to centralize all the 
       return USER;
     };
 
-## MongoDB commands
+## mongoDB commands
 
-Calls to the database are done using the function `mongoCall`.
+Calls to the database are done using the function `mongo`.
+Mongolia supports all the `collection` methods defiend on the driver plus some custom methods.
 
     var Db = require('mongodb/lib/mongodb/db').Db,
         Server = require('mongodb/lib/mongodb/connection').Server,
         db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}));
 
     db.open(function () {
+
         var User = require('./user.js')(db);
-        User.mongoCall('find', {name: 'foo'}, function (error, user) {
+        User.mongo('find', {name: 'foo'}, function (error, user) {
           console.log(user);
         });
+
     });
 
-All the collection.js functions from the driver are supported.
+All the `collection` methods from the driver are supported.
 
-If you need more information visit the [official driver](http://github.com/christkv/node-mongodb-native) documentation
+If you need more information visit the [driver](http://github.com/christkv/node-mongodb-native) documentation
 
-## Custom MongoDB commands
+## Custom mongoDB commands
 
 Mongolia provides some useful commands that are not available using the driver.
 
@@ -66,25 +69,25 @@ Mongolia provides some useful commands that are not available using the driver.
 
 ## Hooks
 
-Mongolia let you define some hooks on your models that will be triggered after a MongoDB command.
+Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `onCreate(element)`: triggered *before* an `insert`. If multiples elements are inserted, it will be called for each of them.
-  * `afterCreate(element)`: triggered *after* an `insert. If multiples elements are inserted, it will be called for each of them.
-  * `onUpdate(update)`: triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(update)`: triggered *after* an `update` or `findAndModify` command. // Not yet implemented!
+  * `onCreate(document, callback)`: triggered *before* an `insert`. If multiples documents are inserted, it will be called for each of them.
+  * `afterCreate(document, callback)`: triggered *after* an `insert. If multiples documents are inserted, it will be called for each of them.
+  * `onUpdate(update, callback)`: triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(update, callback)`: triggered *after* an `update` or `findAndModify` command.
 
 Example:
 
-    var Comment = function (db) {
+    module.exports = function (db) {
       var COMMENT = require('mongolia').model(db, 'comments');
 
-      COMMENT.onCreate = function (element) {
-        element.created_at = new Date();
+      COMMENT.onCreate = function (document) {
+        document.created_at = new Date();
       };
 
-      COMMENT.atferCreate = function (element) {
-        var post = require('./models/post')(this.db);
-        post.mongoCall('update', {_id: element.post_id}, {'$inc': {num_posts: 1}});
+      COMMENT.atferCreate = function (document) {
+        var post = require('./post')(this.db);
+        post.mongo('update', {_id: document.post_id}, {'$inc': {num_posts: 1}});
       };
 
       return COMMENT;
@@ -92,17 +95,17 @@ Example:
 
 ## Embedded documents
 
-Mongolia helps you to denormalize your MongoDB database.
+Mongolia helps you to _denormalize_ your mongoDB database.
 
-### setEmbedObject
+### getEmbeddedDocument
 
-Filters an embed object following the `skeletons` directive.
+Filters document following the `skeletons` directive.
 
-    setEmbedObject(name, object);
+    getEmbeddedDocument(name, object, scope);
 
 Example:
 
-    var Post = function (db) {
+    module.exports = function (db) {
       var POST = require('mongolia').model(db, 'posts');
 
       // only embed the comment's _id, and title
@@ -114,24 +117,26 @@ Example:
     };
 
     var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
-    Post(db).setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
+    console.log(Post(db).getEmbeddedDocument('comment', comment));
+    // outputs => {'_id': 1, title: 'foo'};
 
-### updateEmbedObject
+    console.log(Post(db).getEmbeddedDocument('comment', comment, 'post.comment'));
+    // outputs => {'post.comment._id': 1, 'post.comment.title': 'foo'};
+
+### updateEmbeddedDocument
 
 Updates an embed object.
 
-    updateEmbedObject(model, data, name, options, callback);
+    updateEmbeddedDocument(id, document_name, document, options, callback);
 
 Example:
 
-    var User = function (db) {
+    module.exports = function (db) {
       var USER = require('mongolia').model(db, 'users');
 
       // After updating a user, we want to update denormalized Post.author foreach post
-      USER.afterUpdate = function (element, update) {
-        Post(db).updateEmbedObject(element, update, 'author', null, function (error, docs) {
-          console.log(docs);
-        });
+      USER.afterUpdate = function (document, update) {
+        Post(db).updateEmbeddedDocument(document._id, 'author', update);
       };
 
       return USER;
@@ -145,13 +150,12 @@ Pushes an embed object.
 
 Example:
 
-    var Post = function (db) {
+    module.exports = function (db) {
       var POST = require('mongolia')(db, 'posts');
 
-      POST.afterCreate = function (element) {
-        User(db).pushEmbedObject(element.author, element, 'posts', null, function (error, doc) {
-          // User.posts[] now contains this post
-        });
+      // After creating a post, we want to push it to `users.posts[]`
+      POST.afterCreate = function (document) {
+        User(db).pushEmbedObject(document.author._id, 'posts', document);
       };
 
       return POST;
@@ -160,28 +164,23 @@ Example:
 
 ## Create and update instances
 
-Mongolia provides with two methods that allow you to create and update using the Validator.
+Mongolia provides with two methods that allow you to create and update using the `validator`.
 
-Its important to notice that createInstance and updateInstance are asynchronous methods as some validations may require database call.
+    validateAndInsert(document, callback(error, validator));
+    validateAndUpdate(document, update, callback(error, validator));
 
-    createInstance(element, callback);
-    updateInstance(element, update, callback);
+In order to validate an insertion/update, the model have to implement a `validate` function on your model.
 
-The callback returns _error_, and a _validator_ object.
-
-Those two methods trigger onCreateInstance/onUpdateInstance, asynchronously. [this will be deprecated and replaced with async onCreate and onUpdate soon]
-
-In order to validate an insertion/update, the model have to implement a _validate_ function on your model.
-
-    validate(element, update, callback);
+    validate(document, update, callback);
 
 Example:
 
-    var Post = function (db) {
+    // post.js
+    module.exports = function (db) {
       var POST = require('mongolia').model(db, 'posts');
 
-      POST.validate = function (element, update, callback) {
-        var validator = require('mongolia').validator(element, data);
+      POST.validate = function (document, update, callback) {
+        var validator = require('mongolia').validator(document, data);
 
         validator.validateRegex({
           title: [validator.regex.title, 'Incorrect title'],
@@ -191,21 +190,26 @@ Example:
         if (!update.body === 'Lorem ipsum') {
           validator.addError('body', 'You can be a little bit more creative');
         }
+
         callback(null, validator);
       }
 
       return POST;
     };
 
-    var post = {title: 'This is a post', body: 'Lorem ipsum'};
+    // app.js
+    var Post = require('./post.js');
 
-    Post(db).createInstance(post, function (error, validator) {
-      if (validator.hasErrors()) {
-        console.log(validator.errors);
-      } else {
-        console.log(validator.updated_model);
+    Post(db).createInstance(
+      {title: 'This is a post', body: 'Lorem ipsum'},
+      function (error, validator) {
+        if (validator.hasErrors()) {
+          console.log(validator.errors);
+        } else {
+          console.log(validator.updated_model);
+        }
       }
-    });
+    );
 
 # Validator
 
