@@ -116,6 +116,31 @@ testosterone
     assert.ok(callback_called, 'Model#validateAndInsert never called the callback');
   })
 
+  .add('#beforeCreate default hook sets the created_at date and runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.beforeCreate(document, function() {
+      // Ensure #created_at is a Date
+      assert.ok(document.created_at && document.created_at.constructor.toString().match(/Date/)!==null,
+        'Model#beforeCreate should set document#created_at to be a Date');
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#afterCreate never called the callback');
+  })
+
+  .add('#afterCreate default hook just runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.afterCreate(document, function() {
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#afterCreate never called the callback');
+  })
+
   .run(function () {
     require('sys').print('done!');
   });
