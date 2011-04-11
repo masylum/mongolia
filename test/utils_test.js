@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'testosterone/utils.js'}),
+var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/utils.js'}),
   assert = testosterone.assert,
 
   utils = require('./../lib/utils');

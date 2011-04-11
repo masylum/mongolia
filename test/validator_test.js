@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000}),
+var testosterone = require('testosterone')({post: 3000, title: 'mongolia/validator.js'}),
     assert = testosterone.assert;
 
 testosterone

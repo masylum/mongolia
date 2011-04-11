@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'testosterone/model.js'}),
+var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/model.js'}),
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
 
