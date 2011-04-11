@@ -3,6 +3,7 @@ var testosterone = require('testosterone')({post: 3000, sync: true}),
     gently = global.GENTLY = new (require('gently')),
 
     Model = require('./../lib/model'),
+    collection_proxy = require('./../lib/helpers/collection_proxy'),
     mongodb = require('mongodb'),
     Db = mongodb.Db,
     Server = mongodb.Server,
@@ -32,17 +33,25 @@ testosterone
   })
 
   .add('#getCollection returns a document collection', function () {
+    // gently.expect(db, 'getCollection');
+    // gently.expect(db, 'getCollection', function(collection_name, callback) {
+    //   assert.equal(collection_name, 'users');
+    // });
 
-    gently.expect(db, 'getCollection', function(collection_name, callback) {
-      assert.equal(collection_name, 'users');
-    });
-
-    User.getCollection(function (error, collection) {
-    });
+    assert.ok(typeof User.getCollection(function (error, collection) {}) === 'object');
   })
 
-  .add('#call findArray', function () {
-   
+  .add('#mongo proxies `collection` calls', function () {
+    cb = function(error, doc) {};
+
+    gently.expect(collection_proxy, 'proxy', function(fn, collection, args, callback) {
+      assert.equal(fn, 'findArray');
+      assert.equal(collection.collectionName, 'users');
+      assert.deepEqual(args[0], {"name":"Pau"});
+      assert.equal(callback, cb);
+    });
+
+    User.mongo('findArray', {name: 'Pau'}, cb);
   })
 
   .run(function () {
