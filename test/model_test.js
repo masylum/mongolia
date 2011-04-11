@@ -33,7 +33,7 @@ testosterone
   })
 
   .add('#getCollection returns a document collection', function () {
-    cb = function (error, collection) {};
+    var cb = function (error, collection) {};
     gently.expect(db, 'collection', function (collection_name, callback) {
        assert.equal(collection_name, 'users');
        assert.equal(callback, cb);
@@ -43,7 +43,7 @@ testosterone
   })
 
   .add('#mongo proxies `collection` calls', function () {
-    cb = function (error, doc) {};
+    var cb = function (error, doc) {};
 
     gently.expect(db, 'collection', function (collection_name, callback) {
       callback(undefined, {collectionName: 'users'});
@@ -59,24 +59,24 @@ testosterone
   })
 
   .add('#validate validates a mongo document', function () {
-    document = {};
-    data = {name:'Pau'};
-    var callback_called = false;
+    var document = {},
+        data = {name:'Pau'},
+        callback_called = false,
 
-    callback = function (error, validator) {
-      callback_called = true;
-      assert.equal(error, null);
-      assert.deepEqual(validator.data, {name:'Pau'}) ;
-    };
+        callback = function (error, validator) {
+          callback_called = true;
+          assert.equal(error, null);
+          assert.deepEqual(validator.data, {name:'Pau'}) ;
+        };
 
     User.validate(document, data, callback);
     assert.ok(callback_called, 'Model#validate never called the callback');
   })
 
   .add('#validateAndInsert when the model is invalid does not insert it', function () {
-    document = {};
-    var callback_called = false,
-        cb = function (error, validator) { callback_called = true; }
+    var document = {},
+        callback_called = false,
+        cb = function (error, validator) { callback_called = true; };
 
     gently.expect(User, 'validate', function (document, data, callback) {
       validator = {
@@ -92,9 +92,9 @@ testosterone
   })
 
   .add('#validateAndInsert when the model is valid inserts it afterwards', function () {
-    document = {};
-    var callback_called = false,
-        cb = function (error, validator) { callback_called = true; }
+    var document = {};
+        callback_called = false,
+        cb = function (error, validator) { callback_called = true; };
 
     User.onCreate = function (document, callback) {
       callback(null, document);
@@ -117,8 +117,8 @@ testosterone
   })
 
   .add('#beforeCreate default hook sets the created_at date and runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.beforeCreate(document, function() {
       // Ensure #created_at is a Date
@@ -131,8 +131,8 @@ testosterone
   })
 
   .add('#afterCreate default hook just runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.afterCreate(document, function() {
       callback_called = true; 
@@ -142,8 +142,8 @@ testosterone
   })
 
   .add('#beforeUpdate default hook updated the updated_at date and runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.beforeUpdate(document, function() {
       // Ensure #created_at is a Date
@@ -156,8 +156,8 @@ testosterone
   })
 
   .add('#afterUpdate default hook just runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.afterUpdate(document, function() {
       callback_called = true; 
@@ -167,8 +167,8 @@ testosterone
   })
 
   .add('#beforeRemove default hook just runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.beforeRemove(document, function() {
       callback_called = true; 
@@ -178,8 +178,8 @@ testosterone
   })
 
   .add('#afterRemove default hook just runs the callback', function () {
-    document = {};
-    var callback_called = false;
+    var document = {},
+        callback_called = false;
 
     User.afterRemove(document, function() {
       callback_called = true; 
@@ -187,7 +187,6 @@ testosterone
 
     assert.ok(callback_called, 'Model#afterRemove never called the callback');
   })
-
 
   .run(function () {
     require('sys').print('done!');
