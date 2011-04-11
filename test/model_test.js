@@ -141,6 +141,54 @@ testosterone
     assert.ok(callback_called, 'Model#afterCreate never called the callback');
   })
 
+  .add('#beforeUpdate default hook updated the updated_at date and runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.beforeUpdate(document, function() {
+      // Ensure #created_at is a Date
+      assert.ok(document.$set && document.$set.updated_at && document.$set.updated_at.constructor.toString().match(/Date/)!==null,
+        'Model#beforeUpdate should set update#updated_at to be a Date');
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#afterUpdate never called the callback');
+  })
+
+  .add('#afterUpdate default hook just runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.afterUpdate(document, function() {
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#afterUpdate never called the callback');
+  })
+
+  .add('#beforeRemove default hook just runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.beforeRemove(document, function() {
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#beforeRemove never called the callback');
+  })
+
+  .add('#afterRemove default hook just runs the callback', function () {
+    document = {};
+    var callback_called = false;
+
+    User.afterRemove(document, function() {
+      callback_called = true; 
+    })
+
+    assert.ok(callback_called, 'Model#afterRemove never called the callback');
+  })
+
+
   .run(function () {
     require('sys').print('done!');
   });
