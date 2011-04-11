@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000}),
+var testosterone = require('testosterone')({post: 3000, sync: true}),
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
 
@@ -15,69 +15,36 @@ var testosterone = require('testosterone')({post: 3000}),
     },
 
     User = User(db),
-    sys = require('sys'),
-
-    load_user = function (callback) {
-      remove_users();
-      db.collection('users', function (error, collection) {
-        collection.insert({name: 'Pau', email: 'pau@mongolia.com', password: 'pau123'}, function (error, doc) {
-          callback(doc);
-        });
-      });
-    },
-
-    remove_users = function () {
-      db.collection('users', function (error, collection) {
-        collection.remove({}, function (error, bla) {});
-      });
-    };
-
-db.open();
+    sys = require('sys')
 
 testosterone
 
-  .add('Throws an error when there is no db', function (done) {
+  .add('Throws an error when there is no db', function () {
     assert.throws(function () {
         var model = Model(null);
       }, /You must specify a db/);
   })
 
-  .add('Throws an error when collection is missing', function (done) {
+  .add('Throws an error when collection is missing', function () {
     assert.throws(function () {
         var model = Model(db);
       }, /You must specify a collection name/);
   })
 
-  .add('#getCollection returns a document collection', function (done) {
+  .add('#getCollection returns a document collection', function () {
+
+    gently.expect(db, 'getCollection', function(collection_name, callback) {
+      assert.equal(collection_name, 'users');
+    });
+
     User.getCollection(function (error, collection) {
-      assert.equal(error, null);
-      assert.equal(collection.collectionName, 'users');
     });
   })
 
-  .add('#call findArray', function (done) {
-    load_user(function (user) {
-      var n = 0;
-
-      User.mongoCall('findArray', {}, function (error, doc) {
-        assert.deepEqual(doc, user);
-        n += 1;
-      });
-
-      User.mongoCall('findArray', {name: 'Pau'}, function (error, doc) {
-        assert.deepEqual(doc, user);
-        n += 1;
-      });
-
-      User.mongoCall('findArray', {name: 'Zemba'}, function (error, doc) {
-        assert.deepEqual(doc, []);
-        n += 1;
-      });
+  .add('#call findArray', function () {
    
-    });
   })
 
   .run(function () {
     require('sys').print('done!');
-    db.close();
   });
