@@ -188,6 +188,53 @@ testosterone
     assert.ok(callback_called, 'Model#afterRemove never called the callback');
   })
 
+  .add('#validateAndUpdate when the model is invalid does not update it', function () {
+    var document = {},
+        update = {},
+        options = {},
+        callback_called = false,
+        cb = function (error, validator) { callback_called = true; };
+
+    gently.expect(User, 'validate', function (document, data, callback) {
+      validator = {
+        hasErrors: function () { return true; }
+      };
+      callback(null, validator);
+    });
+
+    gently.expect(User, 'mongo', 0)
+  
+    User.validateAndUpdate(document, update, options, cb);
+    assert.ok(callback_called, 'Model#validateAndUpdate never called the callback');
+  })
+
+  .add('#validateAndUpdate when the model is valid updates it afterwards', function () {
+    var document = {};
+        update = {},
+        options = {},
+        callback_called = false,
+        cb = function (error, validator) { callback_called = true; };
+
+    User.onUpdate = function (document, update, callback) {
+      callback(null, document);
+    };
+
+    gently.expect(User, 'validate', function (document, data, callback) {
+      validator = {
+        hasErrors: function () { return false; }
+      };
+      callback(null, validator);
+    });
+
+    gently.expect(User, 'mongo', function (action, document, update, options, callback) {
+      assert.equal(action, 'update');
+      callback(null, document);
+    });
+  
+    User.validateAndUpdate(document, update, options, cb);
+    assert.ok(callback_called, 'Model#validateAndUpdate never called the callback');
+  })
+
   .run(function () {
     require('sys').print('done!');
   });
