@@ -66,41 +66,28 @@ testosterone
   .add('`validate` validates a mongo document', function () {
     var document = {},
         data = {name: 'Pau'},
-        callback_called = false,
 
-        callback = function (error, validator) {
-          callback_called = true;
+        callback = gently.expect(function (error, validator) {
           assert.equal(error, null);
           assert.deepEqual(validator.data, data);
-        };
+        });
 
     User.validate(document, data, callback);
-    assert.ok(callback_called, 'Model#validate never called the callback');
   })
 
   .add('`validateAndInsert` when the model is invalid does not insert it', function () {
-    var document = {},
-        callback_called = false,
-        cb = function (error, validator) {
-          callback_called = true;
-        };
+    var document = {}, cb;
 
     gently.expect(User, 'validate', function (document, data, callback) {
       callback(null, _mock_validator(true));
     });
-
     gently.expect(User, 'mongo', 0);
 
-    User.validateAndInsert(document, cb);
-    assert.ok(callback_called, 'Model#validateAndInsert never called the callback');
+    User.validateAndInsert(document, gently.expect(function () {}));
   })
 
   .add('`validateAndInsert` when the model is valid inserts it afterwards', function () {
-    var document = {},
-        callback_called = false,
-        cb = function (error, validator) {
-          callback_called = true;
-        };
+    var document = {};
 
     User.onCreate = function (document, callback) {
       callback(null, document);
@@ -115,90 +102,53 @@ testosterone
       callback(null, document);
     });
 
-    User.validateAndInsert(document, cb);
-    assert.ok(callback_called, 'Model#validateAndInsert never called the callback');
+    User.validateAndInsert(document, gently.expect(function () {}));
   })
 
   .add('`beforeCreate` default hook sets the created_at date and runs the callback', function () {
-    var document = {},
-        callback_called = false;
+    var document = {};
 
-    User.beforeCreate(document, function () {
+    User.beforeCreate(document, gently.expect(function () {
       // Ensure #created_at is a Date
       assert.ok(document.created_at, 'Model#beforeCreate should set document#created_at to be a Date');
       assert.equal(document.created_at.constructor, (new Date()).constructor);
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#afterCreate never called the callback');
+    }));
   })
 
   .add('`afterCreate` default hook just runs the callback', function () {
-    var document = {},
-        callback_called = false;
-
-    User.afterCreate(document, function () {
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#afterCreate never called the callback');
+    var document = {};
+    User.afterCreate(document, gently.expect(function () {}));
   })
 
   .add('`beforeUpdate` default hook updated the updated_at date and runs the callback', function () {
-    var update = {},
-        callback_called = false;
+    var update = {};
 
-    User.beforeUpdate(update, function () {
+    User.beforeUpdate(update, gently.expect(function () {
       // Ensure #created_at is a Date
       assert.ok(update.$set && update.$set.updated_at, 'Model#beforeUpdate should set update#updated_at to be a Date');
       assert.equal(update.$set.updated_at.constructor, (new Date()).constructor);
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#afterUpdate never called the callback');
+    }));
   })
 
   .add('`afterUpdate` default hook just runs the callback', function () {
-    var update = {},
-        callback_called = false;
-
-    User.afterUpdate(update, function () {
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#afterUpdate never called the callback');
+    var update = {};
+    User.afterUpdate(update, gently.expect(function () {}));
   })
 
   .add('`beforeRemove` default hook just runs the callback', function () {
-    var document = {},
-        callback_called = false;
-
-    User.beforeRemove(document, function () {
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#beforeRemove never called the callback');
+    var document = {};
+    User.beforeRemove(document, gently.expect(function () {}));
   })
 
   .add('`afterRemove` default hook just runs the callback', function () {
-    var document = {},
-        callback_called = false;
-
-    User.afterRemove(document, function () {
-      callback_called = true;
-    });
-
-    assert.ok(callback_called, 'Model#afterRemove never called the callback');
+    var document = {};
+    User.afterRemove(document, gently.expect(function () {}));
   })
 
   .add('`validateAndUpdate` when the model is invalid does not update it', function () {
     var document = {},
         update = {},
-        options = {},
-        callback_called = false,
-        cb = function (error, validator) {
-          callback_called = true;
-        };
+        options = {};
 
     gently.expect(User, 'validate', function (document, data, callback) {
       callback(null, _mock_validator(true));
@@ -206,18 +156,13 @@ testosterone
 
     gently.expect(User, 'mongo', 0);
 
-    User.validateAndUpdate(document, update, options, cb);
-    assert.ok(callback_called, 'Model#validateAndUpdate never called the callback');
+    User.validateAndUpdate(document, update, options, gently.expect(function () {}));
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
     var document = {},
         update = {},
-        options = {},
-        callback_called = false,
-        cb = function (error, validator) {
-          callback_called = true;
-        };
+        options = {};
 
     User.onUpdate = function (document, update, callback) {
       callback(null, document);
@@ -232,8 +177,7 @@ testosterone
       callback(null, document);
     });
 
-    User.validateAndUpdate(document, update, options, cb);
-    assert.ok(callback_called, 'Model#validateAndUpdate never called the callback');
+    User.validateAndUpdate(document, update, options, gently.expect(function () {}));
   })
 
   .add('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
