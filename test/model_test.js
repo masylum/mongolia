@@ -142,12 +142,12 @@ testosterone
   })
 
   .add('#beforeUpdate default hook updated the updated_at date and runs the callback', function () {
-    var document = {},
+    var update = {},
         callback_called = false;
 
-    User.beforeUpdate(document, function() {
+    User.beforeUpdate(update, function() {
       // Ensure #created_at is a Date
-      assert.ok(document.$set && document.$set.updated_at && document.$set.updated_at.constructor.toString().match(/Date/)!==null,
+      assert.ok(update.$set && update.$set.updated_at && update.$set.updated_at.constructor.toString().match(/Date/)!==null,
         'Model#beforeUpdate should set update#updated_at to be a Date');
       callback_called = true; 
     })
@@ -156,10 +156,10 @@ testosterone
   })
 
   .add('#afterUpdate default hook just runs the callback', function () {
-    var document = {},
+    var update = {},
         callback_called = false;
 
-    User.afterUpdate(document, function() {
+    User.afterUpdate(update, function() {
       callback_called = true; 
     })
 
