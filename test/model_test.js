@@ -58,6 +58,11 @@ testosterone
     User.mongo('findArray', {name: 'Pau'}, cb);
   })
 
+  .add('#validate validates a mongo document', function () {
+     
+  
+  })
+
   .run(function () {
     require('sys').print('done!');
   });
