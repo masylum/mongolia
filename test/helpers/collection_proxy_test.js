@@ -56,13 +56,25 @@ testosterone
     Collection.findArray(_model, coll, args, cb);
   })
 
-  // TODO: Fix undefined MODEL
+
+  // TODO: test calling after create hook
   .add('`insert` inserts a record', function () {
-    var coll = {foo: 'bar'},
+    var coll = {insert: function(c,a) {}},
         cb = function () {},
         args = ['fleiba', cb];
 
-    console.log("\033[0;31mPENDING: (undefined MODEL)\033[0m");
+    gently.expect(_model, 'beforeCreate', function (ar, callback) {
+      assert.deepEqual(ar, args[0]);
+
+      gently.expect(coll.insert, 'apply', function (collection, ars) {
+        assert.deepEqual(collection, coll);
+        assert.deepEqual(ars[0], ['document1', 'document2']);
+      });
+      callback(null, ['document1', 'document2']);
+    });
+
+    gently.restore(Collection, 'insert');
+    Collection.insert(_model, coll, args, cb);
   })
 
   // TODO: Fix undefined MODEL
@@ -88,7 +100,7 @@ testosterone
       // });
     });
 
-    Collection.mapReduceCursor(collection, args, 'whatever', cb);
+    Collection.mapReduceCursor(_model, collection, args, 'mapReduce', cb);
   })
 
   .add('`mapReduceArray` returns a mapReduceCursor to Array', function () {
@@ -108,7 +120,7 @@ testosterone
       _callback(null, cursor);
     });
 
-    Collection.mapReduceArray(collection, args, 'whatever', cb);
+    Collection.mapReduceArray(_model, collection, args, cb);
   })
 
   .run(function () {
