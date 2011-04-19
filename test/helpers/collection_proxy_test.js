@@ -102,19 +102,21 @@ testosterone
 
   .add('`mapReduceCursor` calls mapReduce returning a cursor', function () {
     var collection = {'mapReduce': function () {}},
-      args = {},
+      args = ['a', 'b'],
+      coll = {},
       cb = function () {};
 
     gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
       assert.equal(_collection, collection);
       assert.equal(_args, args);
-      // TODO: Ensure this piece of code gets called.
-      // assert.equal(_args[args.length -1], function (error, collection) {
-      //   collection.find(callback);
-      // });
+
+      gently.expect(coll, 'find', function (callback) {
+        assert.deepEqual(callback, cb);
+      });
+      _args[1](null, coll);
     });
 
-    Collection.mapReduceCursor(_model, collection, args, 'mapReduce', cb);
+    Collection.mapReduceCursor(_model, collection, args, cb);
   })
 
   .add('`mapReduceArray` returns a mapReduceCursor to Array', function () {
