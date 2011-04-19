@@ -137,6 +137,24 @@ testosterone
     Collection.mapReduceArray(_model, collection, args, cb);
   })
 
+  .add('`remove` removes a document', function () {
+    var coll = {remove: function(c,a) {}},
+        cb = function () {},
+        args = ['fleiba', cb];
+
+    gently.expect(_model, 'beforeRemove', function (ar, callback) {
+      assert.deepEqual(ar, args[0]);
+
+      gently.expect(coll.remove, 'apply', function (collection, ars) {
+        assert.deepEqual(collection, coll);
+        assert.deepEqual(ars[0], ['document1', 'document2']);
+      });
+      callback(null, ['document1', 'document2']);
+    });
+
+    Collection.remove(_model, coll, args, cb);
+  })
+
   .run(function () {
     // zemba
   });
