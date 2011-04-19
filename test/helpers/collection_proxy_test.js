@@ -36,8 +36,11 @@ testosterone
 
   .add('`findArray` calls find on a collection with some arguments', function () {
     var coll = {foo: 'bar'},
-        cb = function (error, cursor) {},
+        cb = function (error, cursor) {
+          assert.deepEqual(error, "could not access DB");
+        },
         cursor = {fleiba: 'zemba'},
+        error_result = null,
         args = ['fleiba', cb];
 
     gently.expect(coll, 'find', function (ar, callback) {
@@ -49,7 +52,8 @@ testosterone
       });
       args[1](null, cursor);
 
-      // TODO: test error
+      // Trigger the error
+      args[1]('could not access DB', cursor);
     });
 
     gently.restore(Collection, 'findArray');
