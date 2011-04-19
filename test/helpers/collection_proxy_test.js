@@ -61,10 +61,12 @@ testosterone
   })
 
 
-  // TODO: test calling after create hook
   .add('`insert` inserts a record', function () {
     var coll = {insert: function(c,a) {}},
-        cb = function () {},
+        cb = function (error, docs) {
+          assert.deepEqual(error, 'could not access the DB');
+          assert.equal(docs, null);
+        },
         args = ['fleiba', cb];
 
     gently.expect(_model, 'beforeCreate', function (ar, callback) {
@@ -73,8 +75,19 @@ testosterone
       gently.expect(coll.insert, 'apply', function (collection, ars) {
         assert.deepEqual(collection, coll);
         assert.deepEqual(ars[0], ['document1', 'document2']);
+
+        gently.expect(_model, 'afterCreate', function (docs, callback) {
+          assert.deepEqual(docs, [1,2,3]);
+          assert.deepEqual(callback, cb);
+        });
+        ars[1](null, [1,2,3]);
+
+        //Trigger the error
+        gently.expect(_model, 'afterCreate');
+        ars[1]('could not access the DB', [1,2,3]);
       });
       callback(null, ['document1', 'document2']);
+
     });
 
     gently.restore(Collection, 'insert');
@@ -83,7 +96,10 @@ testosterone
 
   .add('`update` finds and modifies a record', function () {
     var coll = {update: function(c,a) {}},
-        cb = function () {},
+        cb = function (error, docs) {
+          assert.deepEqual(error, 'could not access the DB');
+          assert.equal(docs, null);
+        },
         args = ['fleiba', cb];
 
     gently.expect(_model, 'beforeUpdate', function (ar, callback) {
@@ -92,7 +108,15 @@ testosterone
       gently.expect(coll.update, 'apply', function (collection, ars) {
         assert.deepEqual(collection, coll);
         assert.deepEqual(ars[0], ['document1', 'document2']);
+
+        gently.expect(_model, 'afterUpdate');
+        ars[1](null, [1,2,3]);
+
+        //Trigger the error
+        gently.expect(_model, 'afterUpdate');
+        ars[1]('could not access the DB', [1,2,3]);
       });
+
       callback(null, ['document1', 'document2']);
     });
 
