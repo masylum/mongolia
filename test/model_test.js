@@ -63,6 +63,24 @@ testosterone
     User.mongo('findArray', query, cb);
   })
 
+  .add('`mongo` can be called without a callback', function () {
+    var query = {name: 'Pau'},
+        coll = {collectionName: 'users'};
+
+    gently.expect(_db, 'collection', function (collection_name, callback) {
+      callback(null, coll);
+    });
+
+    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
+      assert.equal(fn, 'findArray');
+      assert.deepEqual(collection, coll);
+      assert.deepEqual(args[0], query);
+      assert.equal(typeof callback, 'function');
+    });
+
+    User.mongo('findArray', query);
+  })
+
   .add('`validate` validates a mongo document', function () {
     var document = {},
         data = {name: 'Pau'},
