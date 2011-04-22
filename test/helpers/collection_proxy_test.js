@@ -34,6 +34,31 @@ testosterone
     });
   })
 
+  .add('`proxy` can be called with no callback', function () {
+    var coll = {foo: 'bar'},
+        args = ['zemba'];
+
+    ['update', 'insert', 'findArray'].forEach(function (method) {
+      gently.expect(Collection, method, function (model, collection, ar, cb) {
+        assert.equal(model, _model);
+        assert.equal(coll, collection);
+        assert.deepEqual(args, ar);
+        assert.equal(typeof cb, 'function');
+      });
+
+      Collection.proxy(_model, method, coll, args);
+    });
+
+    ['find', 'foo'].forEach(function (method) {
+      gently.expect(coll, method, function (arg, callback) {
+        assert.equal(arg, args[0]);
+        assert.deepEqual(callback, args[1]);
+      });
+
+      Collection.proxy(_model, method, coll, args);
+    });
+  })
+
   .add('`findArray` calls find on a collection with some arguments', function () {
     var coll = {foo: 'bar'},
         cb = function (error, cursor) {

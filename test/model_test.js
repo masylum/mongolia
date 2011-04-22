@@ -44,7 +44,7 @@ testosterone
     User.getCollection(cb);
   })
 
-  .add('`mongo proxies` collection calls', function () {
+  .add('`mongo` proxies collection calls', function () {
     var cb = function (error, doc) {},
         query = {name: 'Pau'},
         coll = {collectionName: 'users'};
@@ -61,6 +61,24 @@ testosterone
     });
 
     User.mongo('findArray', query, cb);
+  })
+
+  .add('`mongo` can be called without a callback', function () {
+    var query = {name: 'Pau'},
+        coll = {collectionName: 'users'};
+
+    gently.expect(_db, 'collection', function (collection_name, callback) {
+      callback(null, coll);
+    });
+
+    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
+      assert.equal(fn, 'findArray');
+      assert.deepEqual(collection, coll);
+      assert.deepEqual(args[0], query);
+      assert.equal(typeof callback, 'function');
+    });
+
+    User.mongo('findArray', query);
   })
 
   .add('`validate` validates a mongo document', function () {
@@ -160,8 +178,8 @@ testosterone
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
-    var document = {},
-        update = {},
+    var document = {name: 'Pau', email: 'zemba@foobar.com'},
+        update = {name: 'John'},
         options = {};
 
     User.onUpdate = function (document, update, callback) {
@@ -172,8 +190,9 @@ testosterone
       callback(null, _mock_validator(false));
     });
 
-    gently.expect(User, 'mongo', function (action, document, update, options, callback) {
+    gently.expect(User, 'mongo', function (action, _document, _update, _options, callback) {
       assert.equal(action, 'update');
+      assert.equal(_update, update);
       callback(null, document);
     });
 
