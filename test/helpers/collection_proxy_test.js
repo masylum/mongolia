@@ -72,13 +72,14 @@ testosterone
         assert.deepEqual(collection, coll);
         assert.deepEqual(ars[0], ['document1', 'document2']);
 
+        // OK
         gently.expect(_model, 'afterCreate', function (docs, callback) {
           assert.deepEqual(docs, [1, 2, 3]);
           assert.deepEqual(callback, cb);
         });
         ars[1](null, [1, 2, 3]);
 
-        //Trigger the error
+        // ERROR
         gently.expect(_model, 'afterCreate');
         ars[1]('could not access the DB', [1, 2, 3]);
       });
@@ -105,10 +106,11 @@ testosterone
         assert.deepEqual(collection, coll);
         assert.deepEqual(ars[0], ['document1', 'document2']);
 
+        // OK
         gently.expect(_model, 'afterUpdate');
         ars[1](null, [1, 2, 3]);
 
-        //Trigger the error
+        // ERROR
         gently.expect(_model, 'afterUpdate');
         ars[1]('could not access the DB', [1, 2, 3]);
       });
@@ -120,11 +122,11 @@ testosterone
     Collection.update(_model, coll, args, cb);
   })
 
-  .add('`findAndModify` is an alias to `update`', function () {
+  .add('`findAndModify` behaves like `update`', function () {
     assert.deepEqual(Collection.findAndModify, Collection.update);
   })
 
-  .add('`mapReduceCursor` calls mapReduce returning a cursor', function () {
+  .add('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
     var collection = {'mapReduce': function () {}},
         args = ['a', 'b'],
         coll = {},
@@ -134,16 +136,24 @@ testosterone
       assert.equal(_collection, collection);
       assert.equal(_args, args);
 
+      // OK
       gently.expect(coll, 'find', function (callback) {
         assert.deepEqual(callback, cb);
       });
       _args[1](null, coll);
+
+      // ERROR
+      gently.expect(cb, function (error, coll) {
+        assert.ok(error);
+        assert.equal(coll, null);
+      });
+      args[1]('could not access the DB', [1, 2, 3]);
     });
 
     Collection.mapReduceCursor(_model, collection, args, cb);
   })
 
-  .add('`mapReduceArray` returns a mapReduceCursor to Array', function () {
+  .add('`mapReduceArray` returns a `mapReduceCursor` to Array', function () {
     var collection = {'mapReduce': function () {}},
         args = {},
         cursor = {},
