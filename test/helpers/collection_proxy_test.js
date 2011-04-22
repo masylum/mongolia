@@ -129,28 +129,36 @@ testosterone
   .add('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
     var collection = {'mapReduce': function () {}},
         args = ['a', 'b'],
-        coll = {},
+        coll = {foo: 'bar'};
+
+    [null, 'could not access the DB'].forEach(function (error) {
+      var cb = null;
+
+      gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
+        assert.equal(_collection, collection);
+        assert.equal(_args, args);
+
+        if (!error) {
+          gently.expect(coll, 'find', function (callback) {
+            assert.ok(callback);
+          });
+        }
+
+        _args[1](error, coll);
+      });
+
+      // TODO: Refactor this test
+      if (error) {
+        cb = gently.expect(function (_err, _coll) {
+          assert.equal(_err, error);
+          assert.equal(_coll, null);
+        });
+      } else {
         cb = function () {};
+      }
 
-    gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
-      assert.equal(_collection, collection);
-      assert.equal(_args, args);
-
-      // OK
-      gently.expect(coll, 'find', function (callback) {
-        assert.deepEqual(callback, cb);
-      });
-      _args[1](null, coll);
-
-      // ERROR
-      gently.expect(cb, function (error, coll) {
-        assert.ok(error);
-        assert.equal(coll, null);
-      });
-      args[1]('could not access the DB', [1, 2, 3]);
+      Collection.mapReduceCursor(_model, collection, args, cb);
     });
-
-    Collection.mapReduceCursor(_model, collection, args, cb);
   })
 
   .add('`mapReduceArray` returns a `mapReduceCursor` to Array', function () {
