@@ -90,6 +90,55 @@ db.open(function () {
       }));
     })
 
+    .add('validateAndInsert validates and inserts', function (done) {
+      var User = Model(db, 'users');
+
+      User.validate = function (document, update, callback) {
+        var validator = require('./../../lib/validator')(document);
+
+        if (update.name !== 'zemba') {
+          validator.addError('name', 'We only love Zemba here');
+        }
+
+        callback(null, validator);
+      };
+
+      User.validateAndInsert({name: 'zemba'}, done(function (error, validation) {
+        assert.equal(validation.updated_model.name, 'zemba');
+        assert.deepEqual(validation.errors, {});
+
+        // Try to insert an invalid record
+        User.validateAndInsert({name: 'barbaz'}, function (error, validation) {
+          assert.deepEqual(validation.errors.name, ['We only love Zemba here']);
+        });
+      }));
+    })
+
+    .add('validateAndUpdate validates and updates', function (done) {
+      var User = Model(db, 'users');
+
+      User.mongo('insert', {name: 'John Smith', age: 30}, function (errors, documents) {});
+
+      User.validate = function (document, update, callback) {
+        var validator = require('./../../lib/validator')(document);
+
+        if (update.name !== 'zemba') {
+          validator.addError('name', 'We only love Zemba here');
+        }
+
+        callback(null, validator);
+      };
+
+      User.validateAndUpdate({name: 'John Smith'}, {name: 'foobar'}, done(function (error, validation) {
+        assert.deepEqual(validation.errors.name, ['We only love Zemba here']);
+        assert.deepEqual(validation.updated_model.name, 'John Smith');
+
+        User.validateAndUpdate({name: 'John Smith'}, {name: 'zemba'}, function (error, validation) {
+          assert.deepEqual(validation.errors, {});
+        });
+      }));
+    })
+
     .run(function () {
       require('sys').print('done!');
     });
