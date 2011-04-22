@@ -62,7 +62,7 @@ testosterone
 
 
   .add('`insert` inserts a record', function () {
-    var coll = {insert: function(c,a) {}},
+    var coll = {insert: function (c, a) {}},
         cb = function (error, docs) {
           assert.deepEqual(error, 'could not access the DB');
           assert.equal(docs, null);
@@ -77,14 +77,14 @@ testosterone
         assert.deepEqual(ars[0], ['document1', 'document2']);
 
         gently.expect(_model, 'afterCreate', function (docs, callback) {
-          assert.deepEqual(docs, [1,2,3]);
+          assert.deepEqual(docs, [1, 2, 3]);
           assert.deepEqual(callback, cb);
         });
-        ars[1](null, [1,2,3]);
+        ars[1](null, [1, 2, 3]);
 
         //Trigger the error
         gently.expect(_model, 'afterCreate');
-        ars[1]('could not access the DB', [1,2,3]);
+        ars[1]('could not access the DB', [1, 2, 3]);
       });
       callback(null, ['document1', 'document2']);
 
@@ -95,7 +95,7 @@ testosterone
   })
 
   .add('`update` finds and modifies a record', function () {
-    var coll = {update: function(c,a) {}},
+    var coll = {update: function (c, a) {}},
         cb = function (error, docs) {
           assert.deepEqual(error, 'could not access the DB');
           assert.equal(docs, null);
@@ -110,11 +110,11 @@ testosterone
         assert.deepEqual(ars[0], ['document1', 'document2']);
 
         gently.expect(_model, 'afterUpdate');
-        ars[1](null, [1,2,3]);
+        ars[1](null, [1, 2, 3]);
 
         //Trigger the error
         gently.expect(_model, 'afterUpdate');
-        ars[1]('could not access the DB', [1,2,3]);
+        ars[1]('could not access the DB', [1, 2, 3]);
       });
 
       callback(null, ['document1', 'document2']);
@@ -130,9 +130,9 @@ testosterone
 
   .add('`mapReduceCursor` calls mapReduce returning a cursor', function () {
     var collection = {'mapReduce': function () {}},
-      args = ['a', 'b'],
-      coll = {},
-      cb = function () {};
+        args = ['a', 'b'],
+        coll = {},
+        cb = function () {};
 
     gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
       assert.equal(_collection, collection);
@@ -149,9 +149,9 @@ testosterone
 
   .add('`mapReduceArray` returns a mapReduceCursor to Array', function () {
     var collection = {'mapReduce': function () {}},
-      args = {},
-      cursor = {},
-      cb = function () {};
+        args = {},
+        cursor = {},
+        cb = function () {};
 
     gently.expect(Collection, 'mapReduceCursor', function (_collection, _args, _fn, _callback) {
       assert.equal(_collection, collection);
@@ -168,7 +168,7 @@ testosterone
   })
 
   .add('`remove` removes a document', function () {
-    var coll = {remove: function(c,a) {}},
+    var coll = {remove: function (c, a) {}},
         cb = function () {},
         args = ['fleiba', cb];
 

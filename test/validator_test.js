@@ -2,64 +2,67 @@ var testosterone = require('testosterone')({sync: true, title: 'mongolia/validat
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
 
-    Validator = require('./../lib/validator')
+    Validator = require('./../lib/validator');
 
 testosterone
 
   .add('initial status', function () {
-    var val = Validator({}, {foo: 'bar'}),
-      val2 = Validator({foo: 'zemba', hey: 'joe'}, {foo: 'bar'});
+    var update = {foo: 'bar'},
+        doc = {foo: 'zemba', hey: 'joe'},
+        val = Validator({}, update),
+        val2 = Validator(doc, update);
 
     assert.deepEqual(val.errors, {});
     assert.deepEqual(val.model, {});
-    assert.deepEqual(val.data, {foo: 'bar'});
-    assert.deepEqual(val.updated_model, {foo: 'bar'});
+    assert.deepEqual(val.data, update);
+    assert.deepEqual(val.updated_model, update);
 
     assert.deepEqual(val2.errors, {});
-    assert.deepEqual(val2.model, {foo: 'zemba', hey: 'joe'});
-    assert.deepEqual(val2.data, {foo: 'bar'});
+    assert.deepEqual(val2.model, doc);
+    assert.deepEqual(val2.data, update);
     assert.deepEqual(val2.updated_model, {foo: 'bar', hey: 'joe'});
   })
 
   .add('`addError` adds a validation error', function () {
-    var val = Validator({}, {foo: 'bar'});
-    val.addError('foo', 'foo error');
+    var val = Validator({}, {foo: 'bar'}),
+        error = 'foo error';
 
-    assert.equal(val.errors.foo[0], 'foo error');
+    val.addError('foo', error);
+    assert.equal(val.errors.foo[0], error);
   })
 
   .add('`hasErrors` returns true if the validator has errors', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo', 'foo error');
 
+    val.addError('foo', 'foo error');
     assert.ok(val.hasErrors());
   })
 
   .add('`hasError` returns true if the validator has a particular error', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo', 'foo error');
 
+    val.addError('foo', 'foo error');
     assert.ok(val.hasError('foo'));
   })
 
   .add('nested `addError` adds a nested error', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo.zemba', 'foo error');
 
+    val.addError('foo.zemba', 'foo error');
     assert.equal(val.errors.foo.zemba[0], 'foo error');
   })
 
   .add('`hasErrors` returns whether the validator has nested errors', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo.zemba', 'foo error');
 
+    val.addError('foo.zemba', 'foo error');
     assert.ok(val.hasErrors());
   })
 
   .add('`hasError` returns whether the validator has a particular nested error', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo.zemba', 'foo error');
 
+    val.addError('foo.zemba', 'foo error');
     assert.ok(val.hasError('foo.zemba'));
   })
 
@@ -72,8 +75,8 @@ testosterone
 
   .add('multiple errors per field', function () {
     var val = Validator({}, {foo: 'bar'});
-    val.addError('foo.zemba', 'error1');
 
+    val.addError('foo.zemba', 'error1');
     assert.ok(val.hasError('foo.zemba'));
 
     val.addError('foo.zemba', 'error2');
@@ -86,15 +89,19 @@ testosterone
   })
 
   .add('`isUpdating` returns whether the model is being updated', function () {
-    var val = Validator({}, {foo: 'bar'}),
-        val2 = Validator({zemba: 'fleiba'}, {foo: 'bar'});
+    var update = {foo: 'bar'},
+        val = Validator({}, update),
+        val2 = Validator({zemba: 'fleiba'}, update);
+
     assert.equal(val.isUpdating(), false);
     assert.equal(val2.isUpdating(), true);
   })
 
   .add('`isInserting` returns whether the model is being inserted', function () {
-    var val = Validator({}, {foo: 'bar'}),
-        val2 = Validator({zemba: 'fleiba'}, {foo: 'bar'});
+    var update = {foo: 'bar'},
+        val = Validator({}, update),
+        val2 = Validator({zemba: 'fleiba'}, update);
+
     assert.equal(val.isInserting(), true);
     assert.equal(val2.isInserting(), false);
   })
