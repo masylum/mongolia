@@ -212,6 +212,13 @@ testosterone
     );
   })
 
+  .add('`getEmbeddedDocument` works without specifying the skeletons', function () {
+    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'};
+    User.skeletons = undefined;
+
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), { comment: comment });
+  })
+
   .add('`updateEmbeddedDocument` updates an embedded object', function () {
     var embeddedDocument = {},
         opts = {},
