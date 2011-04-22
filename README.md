@@ -75,8 +75,8 @@ Mongolia let you define some hooks on your models that will be triggered after a
   * `afterCreate(documents, callback)`: triggered *after* an `insert.
   * `onUpdate(update, callback)`: triggered *before* an `update` or `findAndModify` command.
   * `afterUpdate(update, callback)`: triggered *after* an `update` or `findAndModify` command.
-  * `onRemove(document, callback)`: triggered *before* an `remove` command.
-  * `afterRemove(document, callback)`: triggered *after* an `remove` command.
+  * `onRemove(query, callback)`: triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
 
 Example:
 
