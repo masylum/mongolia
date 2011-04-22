@@ -43,17 +43,13 @@ testosterone
         error_result = null,
         args = ['fleiba', cb];
 
-    gently.expect(coll, 'find', function (ar, callback) {
+    gently.expect(coll, 'find', function (ar) {
       assert.deepEqual(ar, args[0]);
+      return cursor;
+    });
 
-      // OK
-      gently.expect(cursor, 'toArray', function (callback) {
-        assert.deepEqual(callback, cb);
-      });
-      args[1](null, cursor);
-
-      // Trigger the error
-      args[1]('could not access DB', cursor);
+    gently.expect(cursor, 'toArray', function (callback) {
+      assert.deepEqual(callback, cb);
     });
 
     gently.restore(Collection, 'findArray');
