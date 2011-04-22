@@ -178,8 +178,8 @@ testosterone
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
-    var document = {},
-        update = {},
+    var document = {name: 'Pau', email: 'zemba@foobar.com'},
+        update = {name: 'John'},
         options = {};
 
     User.onUpdate = function (document, update, callback) {
@@ -190,8 +190,9 @@ testosterone
       callback(null, _mock_validator(false));
     });
 
-    gently.expect(User, 'mongo', function (action, document, update, options, callback) {
+    gently.expect(User, 'mongo', function (action, _document, _update, _options, callback) {
       assert.equal(action, 'update');
+      assert.equal(_update, update);
       callback(null, document);
     });
 
