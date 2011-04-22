@@ -44,7 +44,7 @@ testosterone
     User.getCollection(cb);
   })
 
-  .add('`mongo proxies` collection calls', function () {
+  .add('`mongo` proxies collection calls', function () {
     var cb = function (error, doc) {},
         query = {name: 'Pau'},
         coll = {collectionName: 'users'};
