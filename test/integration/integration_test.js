@@ -77,11 +77,9 @@ db.open(function () {
         callback(null, query);
       };
 
-      console.log('hey');
       User.mongo('findArray', {}, function (error, docs) {
         console.log(docs);
       });
-      console.log('hey');
       User.mongo('remove', {name: 'zemba'}, done(function (error, query) {
         assert.ok(calledBefore);
         assert.ok(calledAfter);
