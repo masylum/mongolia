@@ -71,10 +71,12 @@ Mongolia provides some useful commands that are not available using the driver.
 
 Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `onCreate(document, callback)`: triggered *before* an `insert`. If multiples documents are inserted, it will be called for each of them.
-  * `afterCreate(document, callback)`: triggered *after* an `insert. If multiples documents are inserted, it will be called for each of them.
+  * `onCreate(documents, callback)`: triggered *before* an `insert`.
+  * `afterCreate(documents, callback)`: triggered *after* an `insert.
   * `onUpdate(update, callback)`: triggered *before* an `update` or `findAndModify` command.
   * `afterUpdate(update, callback)`: triggered *after* an `update` or `findAndModify` command.
+  * `onRemove(query, callback)`: triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
 
 Example:
 
