@@ -1,9 +1,9 @@
 var Model = require('./../model');
 
 module.exports = function (db) {
-  var user = Model(db, 'users');
+  var USER = Model(db, 'users');
 
-  user.validate = function (user, data, callback) {
+  USER.validate = function (user, data, callback) {
     var validator = $.model('validator', [user, data]);
 
     validator.validateRegex({
@@ -31,5 +31,5 @@ module.exports = function (db) {
     });
   };
 
-  return user;
+  return USER;
 };

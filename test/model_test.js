@@ -171,7 +171,6 @@ testosterone
     gently.expect(User, 'validate', function (document, data, callback) {
       callback(null, _mock_validator(true));
     });
-
     gently.expect(User, 'mongo', 0);
 
     User.validateAndUpdate(document, update, options, gently.expect(function () {}));
