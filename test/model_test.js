@@ -202,7 +202,7 @@ testosterone
   })
 
   .add('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
-    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'};
+    var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
     User.skeletons = {
       comment: ['_id', 'title']
     };
@@ -210,15 +210,19 @@ testosterone
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo' });
     assert.deepEqual(
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
-      { 'post.comment._id': 1, 'post.comment.title': 'foo' }
+      {'post.comment._id': 1, 'post.comment.title': 'foo'}
     );
   })
 
   .add('`getEmbeddedDocument` works without specifying the skeletons', function () {
-    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'};
-    User.skeletons = undefined;
+    var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
+    User.skeletons = null;
 
-    assert.deepEqual(User.getEmbeddedDocument('comment', comment), { comment: comment });
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo', body: 'Lorem ipsum'});
+    assert.deepEqual(
+      User.getEmbeddedDocument('comment', comment, 'post.comment'),
+      {'post.comment._id': 1, 'post.comment.title': 'foo', 'post.comment.body': 'Lorem ipsum'}
+    );
   })
 
   .add('`updateEmbeddedDocument` updates an embedded object', function () {
