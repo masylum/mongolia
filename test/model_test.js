@@ -124,18 +124,21 @@ testosterone
   })
 
   .add('`beforeCreate` default hook sets the created_at date and runs the callback', function () {
-    var document = {};
+    var documents = [{name: 'zemba', foo: 'bar'}];
 
-    User.beforeCreate(document, gently.expect(function () {
+    User.beforeCreate(documents, gently.expect(function () {
       // Ensure #created_at is a Date
-      assert.ok(document.created_at, 'Model#beforeCreate should set document#created_at to be a Date');
-      assert.equal(document.created_at.constructor, (new Date()).constructor);
+      documents.forEach(function (document) {
+        assert.ok(document.created_at, 'Model#beforeCreate should set document#created_at to be a Date');
+        assert.equal(document.created_at.constructor, (new Date()).constructor);
+      });
     }));
   })
 
   .add('`afterCreate` default hook just runs the callback', function () {
-    var document = {};
-    User.afterCreate(document, gently.expect(function () {}));
+    var documents = [{name: 'zemba', foo: 'bar'}];
+
+    User.afterCreate(documents, gently.expect(function () {}));
   })
 
   .add('`beforeUpdate` default hook updated the updated_at date and runs the callback', function () {
@@ -209,6 +212,13 @@ testosterone
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
       { 'post.comment._id': 1, 'post.comment.title': 'foo' }
     );
+  })
+
+  .add('`getEmbeddedDocument` works without specifying the skeletons', function () {
+    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'};
+    User.skeletons = undefined;
+
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), { comment: comment });
   })
 
   .add('`updateEmbeddedDocument` updates an embedded object', function () {

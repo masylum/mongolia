@@ -1,6 +1,6 @@
 NODE = node
 
-test: test_model test_validator test_utils test_helpers
+test: test_model test_validator test_utils test_helpers test_integration
 
 test_model:
 	@$(NODE) test/model_test.js
@@ -13,3 +13,6 @@ test_helpers:
 
 test_utils:
 	@$(NODE) test/utils_test.js
+
+test_integration:
+	@$(NODE) test/integration/integration_test.js

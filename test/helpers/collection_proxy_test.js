@@ -68,19 +68,16 @@ testosterone
         error_result = null,
         args = ['fleiba', cb];
 
-    gently.expect(coll, 'find', function (ar) {
-      assert.deepEqual(ar, args[0]);
-      return cursor;
-    });
-
-    gently.expect(cursor, 'toArray', function (callback) {
-      assert.deepEqual(callback, cb);
+    gently.expect(coll, 'find', function (collection, ar) {
+      var cb = args[args.length - 1];
+      assert.deepEqual(collection, args[0]);
+      gently.expect(cursor, 'toArray');
+      cb(null, cursor);
     });
 
     gently.restore(Collection, 'findArray');
     Collection.findArray(_model, coll, args, cb);
   })
-
 
   .add('`insert` inserts a record', function () {
     var coll = {insert: function (c, a) {}},
