@@ -124,7 +124,7 @@ testosterone
   })
 
   .add('`beforeCreate` default hook sets the created_at date and runs the callback', function () {
-    var documents = [{name: 'zemba', foo: 'bar'}];
+    var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
     User.beforeCreate(documents, gently.expect(function () {
       // Ensure #created_at is a Date
@@ -136,7 +136,7 @@ testosterone
   })
 
   .add('`afterCreate` default hook just runs the callback', function () {
-    var documents = [{name: 'zemba', foo: 'bar'}];
+    var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
     User.afterCreate(documents, gently.expect(function () {}));
   })
