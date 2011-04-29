@@ -1,12 +1,15 @@
 var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
-
-    Collection = require('./../../lib/helpers/collection_proxy'),
+    Collection,
 
     _model = {};
 
 testosterone
+
+  .before(function () {
+    Collection = require('./../../lib/helpers/collection_proxy')();
+  })
 
   .add('`proxy` delegates every call to a function of Collection or native driver collection', function () {
     var coll = {foo: 'bar'},
@@ -35,7 +38,7 @@ testosterone
   })
 
   .add('`proxy` can be called with no callback', function () {
-    var coll = {foo: 'bar'},
+    var coll = {foo: function () {}, find: function () {}},
         args = ['zemba'];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
@@ -75,7 +78,6 @@ testosterone
       cb(null, cursor);
     });
 
-    gently.restore(Collection, 'findArray');
     Collection.findArray(_model, coll, args, cb);
   })
 
@@ -109,38 +111,32 @@ testosterone
 
     });
 
-    gently.restore(Collection, 'insert');
     Collection.insert(_model, coll, args, cb);
   })
 
   .add('`update` finds and modifies a record', function () {
     var coll = {update: function (c, a) {}},
         cb = function (error, docs) {
-          assert.deepEqual(error, 'could not access the DB');
-          assert.equal(docs, null);
+          assert.deepEqual(error, null);
+          assert.deepEqual(docs, [1, 2, 3]);
         },
-        args = ['fleiba', cb];
+        args = [{name: 'zemba'}, {'$set': {name: 'foo'}}, {}, cb];
 
     gently.expect(_model, 'beforeUpdate', function (ar, callback) {
-      assert.deepEqual(ar, args[0]);
+      assert.deepEqual(ar, args[1]);
 
       gently.expect(coll.update, 'apply', function (collection, ars) {
         assert.deepEqual(collection, coll);
-        assert.deepEqual(ars[0], ['document1', 'document2']);
+        assert.deepEqual(ars[0], args[0]);
+        assert.deepEqual(ars[1].$set.updated_at, 123);
 
-        // OK
         gently.expect(_model, 'afterUpdate');
-        ars[1](null, [1, 2, 3]);
-
-        // ERROR
-        gently.expect(_model, 'afterUpdate');
-        ars[1]('could not access the DB', [1, 2, 3]);
+        ars[3](null, [1, 2, 3]);
       });
 
-      callback(null, ['document1', 'document2']);
+      callback(null, {'$set': {name: 'foo', updated_at: 123}});
     });
 
-    gently.restore(Collection, 'update');
     Collection.update(_model, coll, args, cb);
   })
 
@@ -221,6 +217,4 @@ testosterone
     Collection.remove(_model, coll, args, cb);
   })
 
-  .run(function () {
-    // zemba
-  });
+  .run();

@@ -3,7 +3,6 @@ var testosterone = require('testosterone')({sync: true, title: 'mongolia/model.j
     gently = global.GENTLY = new (require('gently')),
 
     Model = require('./../lib/model'),
-    CollectionProxy = require('./../lib/helpers/collection_proxy'),
 
     _db = {},
     _mock_validator = function (ret) {
@@ -53,7 +52,7 @@ testosterone
       callback(null, coll);
     });
 
-    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
+    gently.expect(User.collection_proxy, 'proxy', function (model, fn, collection, args, callback) {
       assert.equal(fn, 'findArray');
       assert.deepEqual(collection, coll);
       assert.deepEqual(args[0], query);
@@ -71,7 +70,7 @@ testosterone
       callback(null, coll);
     });
 
-    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
+    gently.expect(User.collection_proxy, 'proxy', function (model, fn, collection, args, callback) {
       assert.equal(fn, 'findArray');
       assert.deepEqual(collection, coll);
       assert.deepEqual(args[0], query);
@@ -210,6 +209,19 @@ testosterone
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo' });
     assert.deepEqual(
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
+      {post: {comment: {_id: 1, title: 'foo'}}}
+    );
+  })
+
+  .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
+    var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
+    User.skeletons = {
+      comment: ['_id', 'title']
+    };
+
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), {_id: 1, title: 'foo'}, true);
+    assert.deepEqual(
+      User.getEmbeddedDocument('comment', comment, 'post.comment', true),
       {'post.comment._id': 1, 'post.comment.title': 'foo'}
     );
   })
@@ -221,16 +233,20 @@ testosterone
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo', body: 'Lorem ipsum'});
     assert.deepEqual(
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
-      {'post.comment._id': 1, 'post.comment.title': 'foo', 'post.comment.body': 'Lorem ipsum'}
+      {post: {comment: {_id: 1, title: 'foo', body: 'Lorem ipsum'}}}
     );
   })
 
   .add('`updateEmbeddedDocument` updates an embedded object', function () {
-    var embeddedDocument = {},
+    var embeddedDocument = {'author.name': 'john'},
         opts = {},
         cb = function () {};
 
-    gently.expect(User, 'getEmbeddedDocument', function () {
+    gently.expect(User, 'getEmbeddedDocument', function (name, doc, scope, dot_notation) {
+      assert.equal(name, 'author');
+      assert.deepEqual(doc, {name: 'paco'});
+      assert.equal(scope, 'author');
+      assert.equal(dot_notation, true);
       return embeddedDocument;
     });
 
@@ -242,15 +258,19 @@ testosterone
       assert.equal(callback, cb);
     });
 
-    User.updateEmbeddedDocument(1, 'author', {}, opts, cb);
+    User.updateEmbeddedDocument(1, 'author', {name: 'paco'}, opts, cb);
   })
 
   .add('`pushEmbeddedDocument` pushes an embedded object', function () {
-    var embeddedDocument = {},
+    var embeddedDocument = {'author.name': 'john'},
         opts = {},
         cb = function () {};
 
-    gently.expect(User, 'getEmbeddedDocument', function () {
+    gently.expect(User, 'getEmbeddedDocument', function (name, doc, scope, dot_notation) {
+      assert.equal(name, 'author');
+      assert.deepEqual(doc, {name: 'paco'});
+      assert.equal(scope, 'author');
+      assert.equal(dot_notation, true);
       return embeddedDocument;
     });
 
@@ -262,9 +282,7 @@ testosterone
       assert.equal(callback, cb);
     });
 
-    User.pushEmbeddedDocument(1, 'author', {}, opts, cb);
+    User.pushEmbeddedDocument(1, 'author', {name: 'paco'}, opts, cb);
   })
 
-  .run(function () {
-    // zemba
-  });
+  .run();
