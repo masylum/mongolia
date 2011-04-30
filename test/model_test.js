@@ -3,6 +3,7 @@ var testosterone = require('testosterone')({sync: true, title: 'mongolia/model.j
     gently = global.GENTLY = new (require('gently')),
 
     Model = require('./../lib/model'),
+    CollectionProxy = require('./../lib/helpers/collection_proxy'),
 
     _db = {},
     _mock_validator = function (ret) {
@@ -52,7 +53,7 @@ testosterone
       callback(null, coll);
     });
 
-    gently.expect(User.collection_proxy, 'proxy', function (model, fn, collection, args, callback) {
+    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
       assert.equal(fn, 'findArray');
       assert.deepEqual(collection, coll);
       assert.deepEqual(args[0], query);
@@ -70,7 +71,7 @@ testosterone
       callback(null, coll);
     });
 
-    gently.expect(User.collection_proxy, 'proxy', function (model, fn, collection, args, callback) {
+    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
       assert.equal(fn, 'findArray');
       assert.deepEqual(collection, coll);
       assert.deepEqual(args[0], query);

@@ -1,15 +1,10 @@
 var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
-    Collection,
-
+    Collection = require('./../../lib/helpers/collection_proxy'),
     _model = {};
 
 testosterone
-
-  .before(function () {
-    Collection = require('./../../lib/helpers/collection_proxy')();
-  })
 
   .add('`proxy` delegates every call to a function of Collection or native driver collection', function () {
     var coll = {foo: 'bar'},
@@ -78,6 +73,7 @@ testosterone
       cb(null, cursor);
     });
 
+    gently.restore(Collection, 'findArray');
     Collection.findArray(_model, coll, args, cb);
   })
 
@@ -111,6 +107,7 @@ testosterone
 
     });
 
+    gently.restore(Collection, 'insert');
     Collection.insert(_model, coll, args, cb);
   })
 
@@ -137,6 +134,7 @@ testosterone
       callback(null, {'$set': {name: 'foo', updated_at: 123}});
     });
 
+    gently.restore(Collection, 'update');
     Collection.update(_model, coll, args, cb);
   })
 
