@@ -128,9 +128,6 @@ Example:
     console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
     // outputs => {'post._id': 1, 'post.title': 'foo'};
 
-    console.log(Post(db).getEmbeddedDocument('comment', comment, 'post.comment'));
-    // outputs => {'post.comment._id': 1, 'post.comment.title': 'foo'};
-
 ### updateEmbeddedDocument
 
 Updates an embed object.
