@@ -259,7 +259,7 @@ testosterone
       assert.equal(callback, cb);
     });
 
-    User.updateEmbeddedDocument(1, 'author', {name: 'paco'}, opts, cb);
+    User.updateEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, opts, cb);
   })
 
   .add('`pushEmbeddedDocument` pushes an embedded object', function () {
@@ -277,13 +277,13 @@ testosterone
 
     gently.expect(User, 'mongo', function (action, query, update, options, callback) {
       assert.equal(action, 'update');
-      assert.deepEqual(query, {'author._id': 1});
+      assert.deepEqual(query, {_id: 1});
       assert.deepEqual(update, {'$push': embeddedDocument});
       assert.equal(options, opts);
       assert.equal(callback, cb);
     });
 
-    User.pushEmbeddedDocument(1, 'author', {name: 'paco'}, opts, cb);
+    User.pushEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, opts, cb);
   })
 
   .run();

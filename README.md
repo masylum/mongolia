@@ -103,7 +103,7 @@ Mongolia helps you to _denormalize_ your mongoDB database.
 
 Filters document following the `skeletons` directive.
 
-    getEmbeddedDocument(name, object, scope);
+    getEmbeddedDocument(name, object, scope [, dot_notation]);
 
 Example:
 
@@ -122,6 +122,12 @@ Example:
     console.log(Post(db).getEmbeddedDocument('comment', comment));
     // outputs => {'_id': 1, title: 'foo'};
 
+    console.log(Post(db).getEmbeddedDocument('comment', comment, 'post'));
+    // outputs => {post: {'_id': 1, title: 'foo'}};
+
+    console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
+    // outputs => {'post._id': 1, 'post.title': 'foo'};
+
     console.log(Post(db).getEmbeddedDocument('comment', comment, 'post.comment'));
     // outputs => {'post.comment._id': 1, 'post.comment.title': 'foo'};
 
@@ -129,7 +135,7 @@ Example:
 
 Updates an embed object.
 
-    updateEmbeddedDocument(id, document_name, document, options, callback);
+    updateEmbeddedDocument(query, document_name, document, options, callback);
 
 Example:
 
@@ -138,7 +144,7 @@ Example:
 
       // After updating a user, we want to update denormalized Post.author foreach post
       USER.afterUpdate = function (document, update) {
-        Post(db).updateEmbeddedDocument(document._id, 'author', update);
+        Post(db).updateEmbeddedDocument({_id: document._id}, 'author', update);
       };
 
       return USER;
@@ -148,7 +154,7 @@ Example:
 
 Pushes an embed object.
 
-    pushEmbedObject(model, data, name, options, callback);
+    pushEmbedObject(query, data, name, options, callback);
 
 Example:
 
@@ -157,7 +163,7 @@ Example:
 
       // After creating a post, we want to push it to `users.posts[]`
       POST.afterCreate = function (document) {
-        User(db).pushEmbedObject(document.author._id, 'posts', document);
+        User(db).pushEmbedObject({_id: document.author._id}, 'posts', document);
       };
 
       return POST;

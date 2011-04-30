@@ -61,7 +61,7 @@ db.open(function () {
             Country = Model(db, 'countries');
 
         Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
-          User.updateEmbeddedDocument(doc._id, 'country', {name: 'France'}, {}, function (error, update) {
+          User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error, update) {
             assert.equal(update.$set['country.name'], 'France');
 
             User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
@@ -72,21 +72,19 @@ db.open(function () {
       })
 
       .add('Push embedded documents', function (done) {
-        var User = Model(db, 'users');
+        var User = Model(db, 'users'),
+            funk = require('funk')(),
+            query = {name: 'zemba'};
 
-        User.mongo('findOne', {name: 'zemba'}, function (error, doc) {
-          var funk = require('funk')();
+        User.pushEmbeddedDocument(query, 'comments', {body: 'bla bla bla'}, {}, funk.add(function (error, doc) {
+          assert.equal(doc.$push['comments.body'], 'bla bla bla');
+        }));
 
-          User.pushEmbeddedDocument(doc._id, 'comments', {body: 'bla bla bla'}, {}, funk.add(function (error, doc) {
-            assert.equal(doc.$push['comments.body'], 'bla bla bla');
-          }));
+        User.pushEmbeddedDocument(query, 'comments', {body: 'trolling bla'}, {}, funk.add(function (error, doc) {
+          assert.equal(doc.$push['comments.body'], 'trolling bla');
+        }));
 
-          User.pushEmbeddedDocument(doc._id, 'comments', {body: 'trolling bla'}, {}, funk.add(function (error, doc) {
-            assert.equal(doc.$push['comments.body'], 'trolling bla');
-          }));
-
-          funk.parallel(done);
-        });
+        funk.parallel(done);
       })
 
       .add('Remove documents with beforeRemove and afterRemove hooks', function (done) {
@@ -107,15 +105,14 @@ db.open(function () {
           callback(null, query);
         };
 
-        User.mongo('remove', {name: 'zemba'}, done(function (error, query) {
+        User.mongo('remove', {name: 'zemba'}, function (error, query) {
           assert.ok(calledBefore);
           assert.ok(calledAfter);
           assert.deepEqual(query, {name: 'zemba'});
-          User.mongo('findArray', {}, function (error, docs) {
-            console.log(docs);
-            done();
-          });
-        }));
+          User.mongo('findArray', {}, done(function (error, docs) {
+            assert.deepEqual(docs, []);
+          }));
+        });
       })
 
       .add('validateAndInsert validates and inserts', function (done) {
