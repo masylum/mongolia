@@ -1,7 +1,7 @@
 var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
-    Collection = require('./../../lib/helpers/collection_proxy'),
+    CollectionProxy = require('./../../lib/helpers/collection_proxy'),
     _model = {};
 
 testosterone
@@ -12,14 +12,14 @@ testosterone
         args = ['zemba', cb];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
-      gently.expect(Collection, method, function (model, collection, ar, cb) {
+      gently.expect(CollectionProxy, method, function (model, collection, ar, cb) {
         assert.equal(model, _model);
         assert.equal(coll, collection);
         assert.deepEqual(args, ar);
         assert.equal(cb, cb);
       });
 
-      Collection.proxy(_model, method, coll, args, cb);
+      CollectionProxy.proxy(_model, method, coll, args, cb);
     });
 
     ['find', 'foo'].forEach(function (method) {
@@ -28,7 +28,7 @@ testosterone
         assert.deepEqual(callback, args[1]);
       });
 
-      Collection.proxy(_model, method, coll, args, cb);
+      CollectionProxy.proxy(_model, method, coll, args, cb);
     });
   })
 
@@ -37,14 +37,14 @@ testosterone
         args = ['zemba'];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
-      gently.expect(Collection, method, function (model, collection, ar, cb) {
+      gently.expect(CollectionProxy, method, function (model, collection, ar, cb) {
         assert.equal(model, _model);
         assert.equal(coll, collection);
         assert.deepEqual(args, ar);
         assert.equal(typeof cb, 'function');
       });
 
-      Collection.proxy(_model, method, coll, args);
+      CollectionProxy.proxy(_model, method, coll, args);
     });
 
     ['find', 'foo'].forEach(function (method) {
@@ -53,7 +53,7 @@ testosterone
         assert.deepEqual(callback, args[1]);
       });
 
-      Collection.proxy(_model, method, coll, args);
+      CollectionProxy.proxy(_model, method, coll, args);
     });
   })
 
@@ -73,8 +73,8 @@ testosterone
       cb(null, cursor);
     });
 
-    gently.restore(Collection, 'findArray');
-    Collection.findArray(_model, coll, args, cb);
+    gently.restore(CollectionProxy, 'findArray');
+    CollectionProxy.findArray(_model, coll, args, cb);
   })
 
   .add('`insert` inserts a record', function () {
@@ -92,23 +92,18 @@ testosterone
         assert.deepEqual(collection, coll);
         assert.deepEqual(ars[0], ['document1', 'document2']);
 
-        // OK
         gently.expect(_model, 'afterCreate', function (docs, callback) {
           assert.deepEqual(docs, [1, 2, 3]);
           assert.deepEqual(callback, cb);
         });
         ars[1](null, [1, 2, 3]);
-
-        // ERROR
-        gently.expect(_model, 'afterCreate');
-        ars[1]('could not access the DB', [1, 2, 3]);
       });
       callback(null, ['document1', 'document2']);
 
     });
 
-    gently.restore(Collection, 'insert');
-    Collection.insert(_model, coll, args, cb);
+    gently.restore(CollectionProxy, 'insert');
+    CollectionProxy.insert(_model, coll, args, cb);
   })
 
   .add('`update` finds and modifies a record', function () {
@@ -134,12 +129,12 @@ testosterone
       callback(null, {'$set': {name: 'foo', updated_at: 123}});
     });
 
-    gently.restore(Collection, 'update');
-    Collection.update(_model, coll, args, cb);
+    gently.restore(CollectionProxy, 'update');
+    CollectionProxy.update(_model, coll, args, cb);
   })
 
   .add('`findAndModify` behaves like `update`', function () {
-    assert.deepEqual(Collection.findAndModify, Collection.update);
+    assert.deepEqual(CollectionProxy.findAndModify, CollectionProxy.update);
   })
 
   .add('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
@@ -173,7 +168,7 @@ testosterone
         cb = function () {};
       }
 
-      Collection.mapReduceCursor(_model, collection, args, cb);
+      CollectionProxy.mapReduceCursor(_model, collection, args, cb);
     });
   })
 
@@ -183,7 +178,7 @@ testosterone
         cursor = {},
         cb = function () {};
 
-    gently.expect(Collection, 'mapReduceCursor', function (_collection, _args, _fn, _callback) {
+    gently.expect(CollectionProxy, 'mapReduceCursor', function (_collection, _args, _fn, _callback) {
       assert.equal(_collection, collection);
       assert.equal(_args, args);
       assert.equal(_fn, 'mapReduce');
@@ -194,7 +189,7 @@ testosterone
       _callback(null, cursor);
     });
 
-    Collection.mapReduceArray(_model, collection, args, cb);
+    CollectionProxy.mapReduceArray(_model, collection, args, cb);
   })
 
   .add('`remove` removes a document', function () {
@@ -212,7 +207,7 @@ testosterone
       callback(null, ['document1', 'document2']);
     });
 
-    Collection.remove(_model, coll, args, cb);
+    CollectionProxy.remove(_model, coll, args, cb);
   })
 
   .run();
