@@ -13,13 +13,13 @@ var testosterone = require('testosterone')({sync: true, title: 'mongolia/model.j
         }
       };
     },
-
-    User = (function (db) {
-      var user = Model(db, 'users');
-      return user;
-    }(_db));
+    User;
 
 testosterone
+
+  .before(function () {
+    User = Model(_db, 'users');
+  })
 
   .add('`core` throws an error when there is no db', function () {
     assert.throws(function () {
@@ -46,7 +46,7 @@ testosterone
 
   .add('`mongo` proxies collection calls', function () {
     var cb = function (error, doc) {},
-        query = {name: 'Pau'},
+        query = {name: 'zemba'},
         coll = {collectionName: 'users'};
 
     gently.expect(_db, 'collection', function (collection_name, callback) {
@@ -64,7 +64,7 @@ testosterone
   })
 
   .add('`mongo` can be called without a callback', function () {
-    var query = {name: 'Pau'},
+    var query = {name: 'zemba'},
         coll = {collectionName: 'users'};
 
     gently.expect(_db, 'collection', function (collection_name, callback) {
@@ -83,14 +83,22 @@ testosterone
 
   .add('`validate` validates a mongo document', function () {
     var document = {},
-        data = {name: 'Pau'},
+        update = {name: 'Pau'},
+        validator = {data: 'foo'},
+        callback;
 
-        callback = gently.expect(function (error, validator) {
-          assert.equal(error, null);
-          assert.deepEqual(validator.data, data);
-        });
+    gently.hijacked['./validator'] = gently.expect(function (_document, _update) {
+      assert.deepEqual(document, _document);
+      assert.deepEqual(update, _update);
+      return validator;
+    });
 
-    User.validate(document, data, callback);
+    callback = gently.expect(function (_error, _validator) {
+      assert.equal(_error, null);
+      assert.deepEqual(validator, validator);
+    });
+
+    User.validate(document, update, callback);
   })
 
   .add('`validateAndInsert` when the model is invalid does not insert it', function () {
@@ -107,10 +115,6 @@ testosterone
   .add('`validateAndInsert` when the model is valid inserts it afterwards', function () {
     var document = {};
 
-    User.onCreate = function (document, callback) {
-      callback(null, document);
-    };
-
     gently.expect(User, 'validate', function (document, data, callback) {
       callback(null, _mock_validator(false));
     });
@@ -126,7 +130,7 @@ testosterone
   .add('`beforeCreate` default hook sets the created_at date', function () {
     var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
-    documents = User.beforeCreate(documents);
+    User.beforeCreate(documents);
 
     // Ensure #created_at is a Date
     documents.forEach(function (document) {
@@ -136,9 +140,10 @@ testosterone
   })
 
   .add('`beforeUpdate` default hook updated the updated_at date', function () {
-    var update = {};
+    var query = {foo: 'bar'},
+        update = {fleiba: 'zemba'};
 
-    update = User.beforeUpdate(update);
+    User.beforeUpdate(query, update);
 
     // Ensure #created_at is a Date
     assert.ok(update.$set && update.$set.updated_at, 'Model#beforeUpdate should set update#updated_at to be a Date');
@@ -146,24 +151,25 @@ testosterone
   })
 
   .add('`validateAndUpdate` when the model is invalid does not update it', function () {
-    var document = {},
-        update = {},
+    var document = {foo: 'bar'},
+        update = {fleiba: 'zemba'},
         options = {};
 
     gently.expect(User, 'validate', function (document, data, callback) {
       callback(null, _mock_validator(true));
     });
+
     gently.expect(User, 'mongo', 0);
 
     User.validateAndUpdate(document, update, options, gently.expect(function () {}));
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
-    var document = {name: 'Pau', email: 'zemba@foobar.com'},
+    var document = {name: 'zemba', email: 'zemba@foobar.com'},
         update = {name: 'John'},
         options = {};
 
-    User.onUpdate = function (document, update, callback) {
+    User.beforeUpdate = function (query, update, callback) {
       callback(null, document);
     };
 
@@ -217,7 +223,7 @@ testosterone
     );
   })
 
-  .add('`updateEmbeddedDocument` updates an embedded object', function () {
+  .add('`updateEmbeddedDocument` updates embedded objects', function () {
     var embeddedDocument = {'author.name': 'john'},
         opts = {},
         cb = function () {};
@@ -241,7 +247,7 @@ testosterone
     User.updateEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, opts, cb);
   })
 
-  .add('`pushEmbeddedDocument` pushes an embedded object', function () {
+  .add('`pushEmbeddedDocument` pushes embedded objects', function () {
     var embeddedDocument = {'author.name': 'john'},
         opts = {},
         cb = function () {};

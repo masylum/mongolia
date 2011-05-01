@@ -49,7 +49,7 @@ Mongolia supports all the `collection` methods defiend on the driver plus some c
     db.open(function () {
 
         var User = require('./user.js')(db);
-        User.mongo('find', {name: 'foo'}, function (error, user) {
+        User.mongo('findOne', {name: 'foo'}, function (error, user) {
           console.log(user);
         });
 
@@ -71,12 +71,12 @@ Mongolia provides some useful commands that are not available using the driver.
 
 Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `onCreate(documents, callback)`: triggered *before* an `insert`.
-  * `afterCreate(documents, callback)`: triggered *after* an `insert.
-  * `onUpdate(update, callback)`: triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(update, callback)`: triggered *after* an `update` or `findAndModify` command.
-  * `onRemove(query, callback)`: triggered *before* a `remove` command.
-  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
+  * `onCreate(documents [, callback])`: triggered *before* an `insert`.
+  * `afterCreate(documents [, callback])`: triggered *after* an `insert.
+  * `onUpdate(document, update [, callback])`: triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(document, update [, callback])`: triggered *after* an `update` or `findAndModify` command.
+  * `onRemove(query [, callback])`: triggered *before* a `remove` command.
+  * `afterRemove(query [, callback])`: triggered *after* a `remove` command.
 
 Example:
 
@@ -87,9 +87,9 @@ Example:
         document.created_at = new Date();
       };
 
-      COMMENT.atferCreate = function (document) {
+      COMMENT.atferCreate = function (document, callback) {
         var post = require('./post')(this.db);
-        post.mongo('update', {_id: document.post_id}, {'$inc': {num_posts: 1}});
+        post.mongo('update', {_id: document.post_id}, {'$inc': {num_posts: 1}}, callback);
       };
 
       return COMMENT;
@@ -140,8 +140,8 @@ Example:
       var USER = require('mongolia').model(db, 'users');
 
       // After updating a user, we want to update denormalized Post.author foreach post
-      USER.afterUpdate = function (document, update) {
-        Post(db).updateEmbeddedDocument({_id: document._id}, 'author', update);
+      USER.afterUpdate = function (query, update) {
+        Post(db).updateEmbeddedDocument({_id: query._id}, 'author', update);
       };
 
       return USER;
@@ -159,8 +159,10 @@ Example:
       var POST = require('mongolia')(db, 'posts');
 
       // After creating a post, we want to push it to `users.posts[]`
-      POST.afterCreate = function (document) {
-        User(db).pushEmbedObject({_id: document.author._id}, 'posts', document);
+      POST.afterCreate = function (documents) {
+        documents.forEach(function (document) {
+          User(db).pushEmbedObject({_id: document.author._id}, 'posts', document);
+        });
       };
 
       return POST;

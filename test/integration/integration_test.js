@@ -23,10 +23,11 @@ db.open(function () {
 
     testosterone
 
-      .add('Insert documents with before/afterCreate hooks', function (done) {
+      .add('`Insert` documents with `before/afterCreate` hooks', function (done) {
         var User = Model(db, 'users'),
             Country = Model(db, 'countries');
 
+        // using async callback form
         User.beforeCreate = function (documents, callback) {
           documents.forEach(function (document) {
             document.has_country = true;
@@ -34,11 +35,11 @@ db.open(function () {
           callback(null, documents);
         };
 
-        User.afterCreate = function (documents, callback) {
+        // using sync form
+        User.afterCreate = function (documents) {
           documents.forEach(function (document) {
             document.comments = [];
           });
-          callback(null, documents);
         };
 
         Country.mongo('insert', {name: 'Andorra'}, function (error, docs) {
@@ -56,7 +57,7 @@ db.open(function () {
         });
       })
 
-      .add('Update embedded documents', function (done) {
+      .add('`Update embedded` documents', function (done) {
         var User = Model(db, 'users'),
             Country = Model(db, 'countries');
 
@@ -71,7 +72,7 @@ db.open(function () {
         });
       })
 
-      .add('Push embedded documents', function (done) {
+      .add('`Push embedded` documents', function (done) {
         var User = Model(db, 'users'),
             funk = require('funk')(),
             query = {name: 'zemba'};
@@ -87,35 +88,118 @@ db.open(function () {
         funk.parallel(done);
       })
 
-      .add('Remove documents with beforeRemove and afterRemove hooks', function (done) {
+      .add('`findAndModify` documents with `before/afterUpdate` hooks', function (done) {
+        var User = Model(db, 'users'),
+            Country = Model(db, 'countries'),
+            query = {name: 'zemba'},
+            update = {'$set': {name: 'fleiba'}},
+            calledBefore = false,
+            calledAfter = false;
+
+
+        User.beforeUpdate = function (_query, _update, callback) {
+          calledBefore = true;
+
+          _update.$set.updated_at = new Date();
+
+          Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
+            _update.$set['country.name'] = doc.name;
+
+            assert.deepEqual(_query, query);
+            assert.deepEqual(_update.$set.name, update.$set.name);
+            assert.deepEqual(_update.$set['country.name'], 'Andorra');
+
+            callback(error);
+          });
+        };
+
+        User.afterUpdate = function (_query, _update) {
+          calledAfter = true;
+
+          assert.deepEqual(_query, query);
+          assert.deepEqual(_update.$set.name, update.$set.name);
+          assert.deepEqual(_update.$set['country.name'], 'Andorra');
+        };
+
+        User.mongo('findAndModify', query, [], update, {'new': true}, done(function (error, doc) {
+          assert.ok(calledBefore);
+          assert.ok(calledAfter);
+          assert.deepEqual(doc.country.name, 'Andorra');
+          assert.deepEqual(doc.name, 'fleiba');
+        }));
+      })
+
+      .add('`update` documents with `before/afterUpdate` hooks', function (done) {
+        var User = Model(db, 'users'),
+            Country = Model(db, 'countries'),
+            query = {name: 'fleiba'},
+            update = {'$set': {name: 'zemba'}},
+            calledBefore = false,
+            calledAfter = false;
+
+
+        User.beforeUpdate = function (_query, _update, callback) {
+          calledBefore = true;
+
+          _update.$set.updated_at = new Date();
+
+          Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
+            _update.$set['country.name'] = 'France';
+
+            assert.deepEqual(_query, query);
+            assert.deepEqual(_update.$set.name, update.$set.name);
+
+            callback(error);
+          });
+        };
+
+        User.afterUpdate = function (_query, _update) {
+          calledAfter = true;
+
+          assert.deepEqual(_query, query);
+          assert.deepEqual(_update.$set.name, update.$set.name);
+          assert.deepEqual(_update.$set['country.name'], 'France');
+        };
+
+        User.mongo('update', query, update, function (error, doc) {
+          assert.ok(calledBefore);
+          assert.ok(calledAfter);
+          User.mongo('findArray', update.$set, done(function (error, docs) {
+            var doc = docs[0];
+            assert.deepEqual(doc.country.name, 'France');
+            assert.deepEqual(doc.name, 'zemba');
+          }));
+        });
+      })
+
+      .add('`Remove` documents with `before/afterRemove` hooks', function (done) {
         var User = Model(db, 'users'),
             query = {name: 'zemba'},
             calledBefore = false,
             calledAfter = false;
 
-        User.beforeRemove = function (qry, callback) {
+        User.beforeRemove = function (_query, callback) {
           calledBefore = true;
-          assert.deepEqual(query, qry);
-          callback(null, query);
+          assert.deepEqual(query, _query);
+          callback(null);
         };
 
-        User.afterRemove = function (qry, callback) {
+        User.afterRemove = function (_query, callback) {
           calledAfter = true;
-          assert.deepEqual(query, qry);
-          callback(null, query);
+          assert.deepEqual(query, _query);
+          callback(null);
         };
 
-        User.mongo('remove', {name: 'zemba'}, function (error, query) {
+        User.mongo('remove', query, function (error, ret) {
           assert.ok(calledBefore);
           assert.ok(calledAfter);
-          assert.deepEqual(query, {name: 'zemba'});
           User.mongo('findArray', {}, done(function (error, docs) {
             assert.deepEqual(docs, []);
           }));
         });
       })
 
-      .add('validateAndInsert validates and inserts', function (done) {
+      .add('`validateAndInsert` validates and inserts', function (done) {
         var User = Model(db, 'users');
 
         User.validate = function (document, update, callback) {
@@ -139,7 +223,7 @@ db.open(function () {
         }));
       })
 
-      .add('validateAndUpdate validates and updates', function (done) {
+      .add('`validateAndUpdate` validates and updates', function (done) {
         var User = Model(db, 'users');
 
         User.mongo('insert', {name: 'John Smith', age: 30}, function (errors, documents) {});
