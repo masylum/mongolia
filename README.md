@@ -24,7 +24,7 @@ Mongolia contains two independent modules:
 
 # Model
 
-Each model has a colection name and a reference to the database.
+Each model has a collection name and a reference to the database.
 
 Models don't map data from MongoDB, they are just a layer to centralize all the logic.
 
