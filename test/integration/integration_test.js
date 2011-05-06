@@ -1,5 +1,4 @@
 var testosterone = require('testosterone')({post: 3000, title: 'integration/integration_test.js'}),
-    gently = new (require('gently')),
     assert = testosterone.assert,
 
     Model = require('./../../lib/model'),
@@ -18,7 +17,12 @@ var testosterone = require('testosterone')({post: 3000, title: 'integration/inte
       });
     };
 
-db.open(function () {
+db.open(function (error) {
+
+  if (error) {
+    throw error;
+  }
+
   remove_users(function () {
 
     testosterone
@@ -27,7 +31,6 @@ db.open(function () {
         var User = Model(db, 'users'),
             Country = Model(db, 'countries');
 
-        // using async callback form
         User.beforeCreate = function (documents, callback) {
           documents.forEach(function (document) {
             document.has_country = true;
@@ -35,11 +38,11 @@ db.open(function () {
           callback(null, documents);
         };
 
-        // using sync form
-        User.afterCreate = function (documents) {
+        User.afterCreate = function (documents, callback) {
           documents.forEach(function (document) {
             document.comments = [];
           });
+          callback(null, documents);
         };
 
         Country.mongo('insert', {name: 'Andorra'}, function (error, docs) {
@@ -97,7 +100,7 @@ db.open(function () {
             calledAfter = false;
 
 
-        User.beforeUpdate = function (_query, _update, callback) {
+        User.beforeUpdate = function (_query, _update, _callback) {
           calledBefore = true;
 
           _update.$set.updated_at = new Date();
@@ -109,16 +112,18 @@ db.open(function () {
             assert.deepEqual(_update.$set.name, update.$set.name);
             assert.deepEqual(_update.$set['country.name'], 'Andorra');
 
-            callback(error);
+            _callback(error, _query, _update);
           });
         };
 
-        User.afterUpdate = function (_query, _update) {
+        User.afterUpdate = function (_query, _update, _callback) {
           calledAfter = true;
 
           assert.deepEqual(_query, query);
           assert.deepEqual(_update.$set.name, update.$set.name);
           assert.deepEqual(_update.$set['country.name'], 'Andorra');
+
+          _callback(null, _query, _update);
         };
 
         User.mongo('findAndModify', query, [], update, {'new': true}, done(function (error, doc) {
@@ -138,7 +143,7 @@ db.open(function () {
             calledAfter = false;
 
 
-        User.beforeUpdate = function (_query, _update, callback) {
+        User.beforeUpdate = function (_query, _update, _callback) {
           calledBefore = true;
 
           _update.$set.updated_at = new Date();
@@ -149,16 +154,18 @@ db.open(function () {
             assert.deepEqual(_query, query);
             assert.deepEqual(_update.$set.name, update.$set.name);
 
-            callback(error);
+            _callback(error, _query, _update);
           });
         };
 
-        User.afterUpdate = function (_query, _update) {
+        User.afterUpdate = function (_query, _update, _callback) {
           calledAfter = true;
 
           assert.deepEqual(_query, query);
           assert.deepEqual(_update.$set.name, update.$set.name);
           assert.deepEqual(_update.$set['country.name'], 'France');
+
+          _callback(null, _query, _update);
         };
 
         User.mongo('update', query, update, function (error, doc) {
@@ -181,7 +188,7 @@ db.open(function () {
         User.beforeRemove = function (_query, callback) {
           calledBefore = true;
           assert.deepEqual(query, _query);
-          callback(null);
+          callback(null, _query);
         };
 
         User.afterRemove = function (_query, callback) {

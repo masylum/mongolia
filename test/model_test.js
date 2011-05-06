@@ -36,46 +36,46 @@ testosterone
   .add('`getCollection` returns a document collection', function () {
     var cb = function (error, collection) {};
 
-    gently.expect(_db, 'collection', function (collection_name, callback) {
-      assert.equal(collection_name, 'users');
-      assert.equal(callback, cb);
+    gently.expect(_db, 'collection', function (_collection_name, _callback) {
+      assert.equal(_collection_name, 'users');
+      assert.equal(_callback, cb);
     });
 
     User.getCollection(cb);
   })
 
   .add('`mongo` proxies collection calls', function () {
-    var cb = function (error, doc) {},
+    var callback = function (error, doc) {},
         query = {name: 'zemba'},
-        coll = {collectionName: 'users'};
+        collection = {collectionName: 'users'};
 
-    gently.expect(_db, 'collection', function (collection_name, callback) {
-      callback(null, coll);
+    gently.expect(_db, 'collection', function (_collection_name, _callback) {
+      _callback(null, collection);
     });
 
-    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
-      assert.equal(fn, 'findArray');
-      assert.deepEqual(collection, coll);
-      assert.deepEqual(args[0], query);
-      assert.equal(callback, cb);
+    gently.expect(CollectionProxy, 'proxy', function (_model, _fn, _collection, _args, _callback) {
+      assert.equal(_fn, 'findArray');
+      assert.deepEqual(_collection, collection);
+      assert.deepEqual(_args[0], query);
+      assert.equal(_callback, callback);
     });
 
-    User.mongo('findArray', query, cb);
+    User.mongo('findArray', query, callback);
   })
 
   .add('`mongo` can be called without a callback', function () {
     var query = {name: 'zemba'},
-        coll = {collectionName: 'users'};
+        collection = {collectionName: 'users'};
 
-    gently.expect(_db, 'collection', function (collection_name, callback) {
-      callback(null, coll);
+    gently.expect(_db, 'collection', function (_collection_name, _callback) {
+      _callback(null, collection);
     });
 
-    gently.expect(CollectionProxy, 'proxy', function (model, fn, collection, args, callback) {
-      assert.equal(fn, 'findArray');
-      assert.deepEqual(collection, coll);
-      assert.deepEqual(args[0], query);
-      assert.equal(typeof callback, 'function');
+    gently.expect(CollectionProxy, 'proxy', function (_model, _fn, _collection, _args, _callback) {
+      assert.equal(_fn, 'findArray');
+      assert.deepEqual(_collection, collection);
+      assert.deepEqual(_args[0], query);
+      assert.equal(typeof _callback, 'function');
     });
 
     User.mongo('findArray', query);
@@ -102,92 +102,117 @@ testosterone
   })
 
   .add('`validateAndInsert` when the model is invalid does not insert it', function () {
-    var document = {}, cb;
+    var document = {},
+        validator = _mock_validator(true),
+        callback;
 
-    gently.expect(User, 'validate', function (document, data, callback) {
-      callback(null, _mock_validator(true));
+    gently.expect(User, 'validate', function (_document, _data, _callback) {
+      _callback(null, validator);
     });
-    gently.expect(User, 'mongo', 0);
 
-    User.validateAndInsert(document, gently.expect(function () {}));
+    callback = gently.expect(function (_error, _validator) {
+      assert.equal(_error, null);
+      assert.deepEqual(_validator, validator);
+    });
+
+    User.validateAndInsert(document, callback);
   })
 
   .add('`validateAndInsert` when the model is valid inserts it afterwards', function () {
-    var document = {};
+    var document = {},
+        validator = _mock_validator(false),
+        callback;
 
-    gently.expect(User, 'validate', function (document, data, callback) {
-      callback(null, _mock_validator(false));
+    gently.expect(User, 'validate', function (_document, _data, _callback) {
+      _callback(null, validator);
     });
 
-    gently.expect(User, 'mongo', function (action, document, callback) {
-      assert.equal(action, 'insert');
-      callback(null, document);
+    gently.expect(User, 'mongo', function (_action, _document, _callback) {
+      assert.equal(_action, 'insert');
+      _callback(null, _document);
     });
 
-    User.validateAndInsert(document, gently.expect(function () {}));
+    callback = gently.expect(function (_error, _validator) {
+      assert.equal(_error, null);
+      assert.deepEqual(_validator, validator);
+    });
+
+    User.validateAndInsert(document, callback);
   })
 
   .add('`beforeCreate` default hook sets the created_at date', function () {
     var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
-    User.beforeCreate(documents);
-
-    // Ensure #created_at is a Date
-    documents.forEach(function (document) {
-      assert.ok(document.created_at, 'Model#beforeCreate should set document#created_at to be a Date');
-      assert.equal(document.created_at.constructor, (new Date()).constructor);
+    User.beforeCreate(documents, function (_error, _documents) {
+      _documents.forEach(function (document) {
+        assert.ok(document.created_at);
+        assert.equal(document.created_at.constructor, (new Date()).constructor);
+      });
     });
   })
 
   .add('`beforeUpdate` default hook updated the updated_at date', function () {
     var query = {foo: 'bar'},
-        update = {fleiba: 'zemba'};
+        update = {'$set': {fleiba: 'zemba'}};
 
-    User.beforeUpdate(query, update);
-
-    // Ensure #created_at is a Date
-    assert.ok(update.$set && update.$set.updated_at, 'Model#beforeUpdate should set update#updated_at to be a Date');
-    assert.equal(update.$set.updated_at.constructor, (new Date()).constructor);
+    User.beforeUpdate(query, update, function (error, _query, _update) {
+      assert.ok(_update.$set);
+      assert.ok(_update.$set.updated_at);
+      assert.equal(_update.$set.updated_at.constructor, (new Date()).constructor);
+    });
   })
 
   .add('`validateAndUpdate` when the model is invalid does not update it', function () {
     var document = {foo: 'bar'},
         update = {fleiba: 'zemba'},
-        options = {};
+        validator = _mock_validator(true),
+        options = {},
+        callback;
 
-    gently.expect(User, 'validate', function (document, data, callback) {
-      callback(null, _mock_validator(true));
+    gently.expect(User, 'validate', function (_document, _data, _callback) {
+      _callback(null, validator);
     });
 
-    gently.expect(User, 'mongo', 0);
+    callback = gently.expect(function (_error, _validator) {
+      assert.equal(_error, null);
+      assert.deepEqual(_validator, validator);
+    });
 
-    User.validateAndUpdate(document, update, options, gently.expect(function () {}));
+    User.validateAndUpdate(document, update, options, callback);
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
     var document = {name: 'zemba', email: 'zemba@foobar.com'},
         update = {name: 'John'},
-        options = {};
+        validator = _mock_validator(false),
+        options = {},
+        callback;
 
-    User.beforeUpdate = function (query, update, callback) {
-      callback(null, document);
+    User.beforeUpdate = function (_query, _update, _callback) {
+      _callback(null, document);
     };
 
-    gently.expect(User, 'validate', function (document, data, callback) {
-      callback(null, _mock_validator(false));
+    gently.expect(User, 'validate', function (_document, _data, _callback) {
+      _callback(null, validator);
     });
 
-    gently.expect(User, 'mongo', function (action, _document, _update, _options, callback) {
-      assert.equal(action, 'update');
+    gently.expect(User, 'mongo', function (_action, _document, _update, _options, _callback) {
+      assert.equal(_action, 'update');
       assert.equal(_update, update);
-      callback(null, document);
+      _callback(null, _document);
     });
 
-    User.validateAndUpdate(document, update, options, gently.expect(function () {}));
+    callback = gently.expect(function (_error, _validator) {
+      assert.equal(_error, null);
+      assert.deepEqual(_validator, validator);
+    });
+
+    User.validateAndUpdate(document, update, options, callback);
   })
 
   .add('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
+
     User.skeletons = {
       comment: ['_id', 'title']
     };
@@ -201,6 +226,7 @@ testosterone
 
   .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
+
     User.skeletons = {
       comment: ['_id', 'title']
     };
@@ -214,6 +240,7 @@ testosterone
 
   .add('`getEmbeddedDocument` works without specifying the skeletons', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
+
     User.skeletons = null;
 
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo', body: 'Lorem ipsum'});
@@ -225,50 +252,50 @@ testosterone
 
   .add('`updateEmbeddedDocument` updates embedded objects', function () {
     var embeddedDocument = {'author.name': 'john'},
-        opts = {},
-        cb = function () {};
+        options = {},
+        callback = function () {};
 
-    gently.expect(User, 'getEmbeddedDocument', function (name, doc, scope, dot_notation) {
-      assert.equal(name, 'author');
-      assert.deepEqual(doc, {name: 'paco'});
-      assert.equal(scope, 'author');
-      assert.equal(dot_notation, true);
+    gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
+      assert.equal(_name, 'author');
+      assert.deepEqual(_doc, {name: 'paco'});
+      assert.equal(_scope, 'author');
+      assert.equal(_dot_notation, true);
       return embeddedDocument;
     });
 
-    gently.expect(User, 'mongo', function (action, query, update, options, callback) {
-      assert.equal(action, 'update');
-      assert.deepEqual(query, {'author._id': 1});
-      assert.deepEqual(update, {'$set': embeddedDocument});
-      assert.equal(options, opts);
-      assert.equal(callback, cb);
+    gently.expect(User, 'mongo', function (_action, _query, _update, _options, _callback) {
+      assert.equal(_action, 'update');
+      assert.deepEqual(_query, {'author._id': 1});
+      assert.deepEqual(_update, {'$set': embeddedDocument});
+      assert.equal(_options, options);
+      assert.equal(_callback, callback);
     });
 
-    User.updateEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, opts, cb);
+    User.updateEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, options, callback);
   })
 
   .add('`pushEmbeddedDocument` pushes embedded objects', function () {
     var embeddedDocument = {'author.name': 'john'},
-        opts = {},
-        cb = function () {};
+        options = {},
+        callback = function () {};
 
-    gently.expect(User, 'getEmbeddedDocument', function (name, doc, scope, dot_notation) {
-      assert.equal(name, 'author');
-      assert.deepEqual(doc, {name: 'paco'});
-      assert.equal(scope, 'author');
-      assert.equal(dot_notation, true);
+    gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
+      assert.equal(_name, 'author');
+      assert.deepEqual(_doc, {name: 'paco'});
+      assert.equal(_scope, 'author');
+      assert.equal(_dot_notation, true);
       return embeddedDocument;
     });
 
-    gently.expect(User, 'mongo', function (action, query, update, options, callback) {
-      assert.equal(action, 'update');
-      assert.deepEqual(query, {_id: 1});
-      assert.deepEqual(update, {'$push': embeddedDocument});
-      assert.equal(options, opts);
-      assert.equal(callback, cb);
+    gently.expect(User, 'mongo', function (_action, _query, _update, _options, _callback) {
+      assert.equal(_action, 'update');
+      assert.deepEqual(_query, {_id: 1});
+      assert.deepEqual(_update, {'$push': embeddedDocument});
+      assert.equal(_options, options);
+      assert.equal(_callback, callback);
     });
 
-    User.pushEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, opts, cb);
+    User.pushEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, options, callback);
   })
 
   .run();

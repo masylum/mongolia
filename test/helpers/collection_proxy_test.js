@@ -2,151 +2,188 @@ var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mong
     assert = testosterone.assert,
     gently = global.GENTLY = new (require('gently')),
     CollectionProxy = require('./../../lib/helpers/collection_proxy'),
-    _model = {};
+    Collection = require('mongodb/lib/mongodb/collection').Collection.prototype,
+    Model;
 
 testosterone
+  .before(function () {
+    Model = {};
+  })
 
-  .add('`proxy` delegates every call to a function of Collection or native driver collection', function () {
-    var coll = {foo: 'bar'},
-        cb = function () {},
+  .add('`proxy` delegates every call to collection_proxy or native driver collection functions', function () {
+    var cb = function () {},
         args = ['zemba', cb];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
-      gently.expect(CollectionProxy, method, function (model, collection, ar, cb) {
-        assert.equal(model, _model);
-        assert.equal(coll, collection);
-        assert.deepEqual(args, ar);
-        assert.equal(cb, cb);
+      gently.expect(CollectionProxy, method, function (_model, _collection, _args, _callback) {
+        assert.equal(Model, _model);
+        assert.equal(Collection, _collection);
+        assert.deepEqual(args, _args);
+        assert.equal(cb, _callback);
       });
 
-      CollectionProxy.proxy(_model, method, coll, args, cb);
+      CollectionProxy.proxy(Model, method, Collection, args, cb);
     });
 
     ['find', 'foo'].forEach(function (method) {
-      gently.expect(coll, method, function (arg, callback) {
-        assert.equal(arg, args[0]);
-        assert.deepEqual(callback, args[1]);
+      gently.expect(Collection, method, function (_arg, _callback) {
+        assert.equal(_arg, args[0]);
+        assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(_model, method, coll, args, cb);
+      CollectionProxy.proxy(Model, method, Collection, args, cb);
     });
   })
 
   .add('`proxy` can be called with no callback', function () {
-    var coll = {foo: function () {}, find: function () {}},
-        args = ['zemba'];
+    var args = ['zemba'];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
-      gently.expect(CollectionProxy, method, function (model, collection, ar, cb) {
-        assert.equal(model, _model);
-        assert.equal(coll, collection);
-        assert.deepEqual(args, ar);
-        assert.equal(typeof cb, 'function');
+      gently.expect(CollectionProxy, method, function (_model, _collection, _args, _callback) {
+        assert.equal(_model, Model);
+        assert.equal(_collection, Collection);
+        assert.deepEqual(_args, args);
+        assert.equal(typeof _callback, 'function');
       });
 
-      CollectionProxy.proxy(_model, method, coll, args);
+      CollectionProxy.proxy(Model, method, Collection, args);
     });
 
     ['find', 'foo'].forEach(function (method) {
-      gently.expect(coll, method, function (arg, callback) {
-        assert.equal(arg, args[0]);
-        assert.deepEqual(callback, args[1]);
+      gently.expect(Collection, method, function (_arg, _callback) {
+        assert.equal(_arg, args[0]);
+        assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(_model, method, coll, args);
+      CollectionProxy.proxy(Model, method, Collection, args);
     });
   })
 
   .add('`findArray` calls find on a collection with some arguments', function () {
-    var coll = {foo: 'bar'},
-        cb = function (error, cursor) {
-          assert.deepEqual(error, "could not access DB");
-        },
+    var cb = function (error, cursor) {},
         cursor = {fleiba: 'zemba'},
         error_result = null,
         args = ['fleiba', cb];
 
-    gently.expect(coll, 'find', function (collection, ar) {
-      var cb = args[args.length - 1];
-      assert.deepEqual(collection, args[0]);
+    gently.expect(Collection, 'find', function (_collection, _args) {
+      assert.deepEqual(_collection, args[0]);
       gently.expect(cursor, 'toArray');
-      cb(null, cursor);
+      args[args.length - 1](null, cursor);
     });
 
-    gently.restore(CollectionProxy, 'findArray');
-    CollectionProxy.findArray(_model, coll, args, cb);
+    CollectionProxy.findArray(Model, Collection, args, cb);
   })
 
   .add('`insert` inserts a record', function () {
-    var coll = {insert: function (c, a) {}},
-        cb = function (error, docs) {
-          assert.deepEqual(error, 'could not access the DB');
-          assert.equal(docs, null);
+    var callback_called = false,
+        cb = function (error, ret) {
+          assert.deepEqual(error, null);
+          assert.deepEqual(ret, [1, 2, 3]);
+          callback_called = true;
         },
         args = ['fleiba', cb];
 
-    gently.expect(_model, 'beforeCreate', function (ar, callback) {
+    gently.expect(Model, 'beforeCreate', function (ar, callback) {
       assert.deepEqual(ar, args[0]);
 
-      gently.expect(coll.insert, 'apply', function (collection, ars) {
-        assert.deepEqual(collection, coll);
-        assert.deepEqual(ars[0], ['document1', 'document2']);
+      gently.expect(Collection.insert, 'apply', function (_collection, _args) {
+        assert.deepEqual(_collection, Collection);
+        assert.deepEqual(_args[0], ['document1', 'document2']);
 
-        gently.expect(_model, 'afterCreate', function (docs, callback) {
-          assert.deepEqual(docs, [1, 2, 3]);
-          assert.deepEqual(callback, cb);
+        gently.expect(Model, 'afterCreate', function (_docs, _callback) {
+          assert.deepEqual(_docs, ['document1', 'document2']);
+          _callback(null);
+          assert.ok(callback_called);
         });
-        ars[1](null, [1, 2, 3]);
-      });
-      callback(null, ['document1', 'document2']);
 
+        _args[1](null, [1, 2, 3]);
+      });
+
+      callback(null, ['document1', 'document2']);
     });
 
-    gently.restore(CollectionProxy, 'insert');
-    CollectionProxy.insert(_model, coll, args, cb);
+    CollectionProxy.insert(Model, Collection, args, cb);
   })
 
   .add('`update` finds and modifies a record', function () {
-    var coll = {update: function (c, a) {}},
-        cb = function (error, docs) {
+    var callback_called = false,
+        cb = function (error, ret) {
           assert.deepEqual(error, null);
-          assert.deepEqual(docs, [1, 2, 3]);
+          assert.deepEqual(ret, [1, 2, 3]);
+          callback_called = true;
         },
         args = [{name: 'zemba'}, {'$set': {name: 'foo'}}, {}, cb];
 
-    gently.expect(_model, 'beforeUpdate', function (ar, callback) {
-      assert.deepEqual(ar, args[1]);
+    gently.expect(Model, 'beforeUpdate', function (_query, _update, _callback) {
+      assert.deepEqual(_query, args[0]);
+      assert.deepEqual(_update, args[1]);
+      _update.$set.updated_at = 123;
 
-      gently.expect(coll.update, 'apply', function (collection, ars) {
-        assert.deepEqual(collection, coll);
-        assert.deepEqual(ars[0], args[0]);
-        assert.deepEqual(ars[1].$set.updated_at, 123);
+      gently.expect(Collection.update, 'apply', function (_collection, _args) {
+        assert.deepEqual(_collection, Collection);
+        assert.deepEqual(_args[0], args[0]);
+        assert.deepEqual(_args[1].$set.updated_at, 123);
 
-        gently.expect(_model, 'afterUpdate');
-        ars[3](null, [1, 2, 3]);
+        gently.expect(Model, 'afterUpdate', function (_doc, _update, _callback) {
+          assert.deepEqual(_doc, args[0]);
+          assert.deepEqual(_update, args[1]);
+          _callback(null);
+          assert.ok(callback_called);
+        });
+
+        _args[3](null, [1, 2, 3]);
       });
 
-      callback(null, {'$set': {name: 'foo', updated_at: 123}});
+      _callback(null, _query, _update);
     });
 
-    gently.restore(CollectionProxy, 'update');
-    CollectionProxy.update(_model, coll, args, cb);
+    CollectionProxy.update(Model, Collection, args, cb);
   })
 
-  .add('`findAndModify` behaves like `update`', function () {
-    assert.deepEqual(CollectionProxy.findAndModify, CollectionProxy.update);
+  .add('`findAndModify` finds and modifies a record', function () {
+    var callback_called = false,
+        cb = function (error, ret) {
+          assert.deepEqual(error, null);
+          assert.deepEqual(ret, [1, 2, 3]);
+          callback_called = true;
+        },
+        args = [{name: 'zemba'}, [], {'$set': {name: 'foo'}}, {}, cb];
+
+    gently.expect(Model, 'beforeUpdate', function (_query, _update, _callback) {
+      assert.deepEqual(_query, args[0]);
+      assert.deepEqual(_update, args[2]);
+      _update.$set.updated_at = 123;
+
+      gently.expect(Collection.findAndModify, 'apply', function (_collection, _args) {
+        assert.deepEqual(_collection, Collection);
+        assert.deepEqual(_args[0], args[0]);
+        assert.deepEqual(_args[2].$set.updated_at, 123);
+
+        gently.expect(Model, 'afterUpdate', function (_doc, _update, _callback) {
+          assert.deepEqual(_doc, args[0]);
+          assert.deepEqual(_update, args[2]);
+          _callback(null);
+          assert.ok(callback_called);
+        });
+
+        _args[4](null, [1, 2, 3]);
+      });
+
+      _callback(null, _query, _update);
+    });
+
+    CollectionProxy.findAndModify(Model, Collection, args, cb);
   })
 
   .add('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
-    var collection = {'mapReduce': function () {}},
-        args = ['a', 'b'],
+    var args = ['a', 'b'],
         coll = {foo: 'bar'};
 
     [null, 'could not access the DB'].forEach(function (error) {
       var cb = null;
 
-      gently.expect(collection.mapReduce, 'apply', function (_collection, _args) {
-        assert.equal(_collection, collection);
+      gently.expect(Collection.mapReduce, 'apply', function (_collection, _args) {
+        assert.equal(_collection, Collection);
         assert.equal(_args, args);
 
         if (!error) {
@@ -168,46 +205,59 @@ testosterone
         cb = function () {};
       }
 
-      CollectionProxy.mapReduceCursor(_model, collection, args, cb);
+      CollectionProxy.mapReduceCursor(Model, Collection, args, cb);
     });
   })
 
   .add('`mapReduceArray` returns a `mapReduceCursor` to Array', function () {
-    var collection = {'mapReduce': function () {}},
-        args = {},
-        cursor = {},
-        cb = function () {};
+    var cb = function () {},
+        args = ['fleiba', cb],
+        cursor = {};
 
     gently.expect(CollectionProxy, 'mapReduceCursor', function (_collection, _args, _fn, _callback) {
-      assert.equal(_collection, collection);
+      assert.equal(_collection, Collection);
       assert.equal(_args, args);
       assert.equal(_fn, 'mapReduce');
 
-      gently.expect(cursor, 'toArray', function (__callback) {
-        assert.equal(__callback, cb);
+      gently.expect(cursor, 'toArray', function (_callback) {
+        assert.equal(_callback, cb);
       });
+
       _callback(null, cursor);
     });
 
-    CollectionProxy.mapReduceArray(_model, collection, args, cb);
+    CollectionProxy.mapReduceArray(Model, Collection, args, cb);
   })
 
   .add('`remove` removes a document', function () {
-    var coll = {remove: function (c, a) {}},
-        cb = function () {},
+    var callback_called = false,
+        cb = function (error, ret) {
+          assert.deepEqual(error, null);
+          assert.deepEqual(ret, [1, 2, 3]);
+          callback_called = true;
+        },
         args = ['fleiba', cb];
 
-    gently.expect(_model, 'beforeRemove', function (ar, callback) {
-      assert.deepEqual(ar, args[0]);
+    gently.expect(Model, 'beforeRemove', function (_query, _callback) {
+      assert.deepEqual(_query, args[0]);
 
-      gently.expect(coll.remove, 'apply', function (collection, ars) {
-        assert.deepEqual(collection, coll);
-        assert.deepEqual(ars[0], ['document1', 'document2']);
+      gently.expect(Collection.remove, 'apply', function (_collection, _args) {
+        assert.deepEqual(Collection, _collection);
+        assert.deepEqual(_args[0], args[0]);
+
+        gently.expect(Model, 'afterRemove', function (_query, _callback) {
+          assert.deepEqual(_query, args[0]);
+          _callback(null);
+          assert.ok(callback_called);
+        });
+
+        _args[1](null, [1, 2, 3]);
       });
-      callback(null, ['document1', 'document2']);
+
+      _callback(null, _query);
     });
 
-    CollectionProxy.remove(_model, coll, args, cb);
+    CollectionProxy.remove(Model, Collection, args, cb);
   })
 
   .run();
