@@ -187,7 +187,7 @@ module.exports = function (db) {
 }
 ```
 
-## Create and update instances
+## Create and update using validations
 
 Mongolia provides with two methods that allow you to create and update using the `validator`.
 
@@ -230,7 +230,7 @@ module.exports = function (db) {
 // app.js
 var Post = require('./post.js');
 
-Post(db).createInstance(
+Post(db).validateAndInsert(
   {title: 'This is a post', body: 'Lorem ipsum'},
   function (error, validator) {
     if (validator.hasErrors()) {
