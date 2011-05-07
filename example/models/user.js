@@ -3,10 +3,10 @@ module.exports = function (APP) {
       Post = APP.loadModel('post');
 
   USER.validate = function (document, update, callback) {
-    var validator = APP.validator(document);
+    var validator = APP.validator(document, update);
 
     validator.validateRegex({
-      name: [validator.regex.username, 'Incorrect name'],
+      name: [/[a-zA-Z_\s]{3,20}/, 'Incorrect name'],
       email: [validator.regex.email, 'Incorrect email'],
       password: [validator.regex.password, 'Incorrect password']
     });
@@ -17,20 +17,20 @@ module.exports = function (APP) {
       });
     }
 
-    validator.validateQuery({
-      name: [this, {name: update.name}, false, 'There is already a user with this name'],
-      email: [this, {email: update.email}, false, 'There is already a user with this email']
-    }, function () {
+    if (!validator.isUpdating()) {
+      validator.validateQuery({
+        name: [this, {name: update.name}, false, 'There is already a user with this name'],
+        email: [this, {email: update.email}, false, 'There is already a user with this email']
+      }, function () {
+        callback(null, validator);
+      });
+    } else {
       callback(null, validator);
-    });
+    }
   };
 
-  USER.afterUpdate = function (documents, callback) {
-    var funk = require('funk')();
-    documents.forEach(function (document) {
-      Post().updateEmbeddedDocument({'author._id': document._id}, 'author', document, {}, funk.nothing());
-    });
-    funk.parallel(callback);
+  USER.afterUpdate = function (query, update, callback) {
+    Post().updateEmbeddedDocument({'_id': query._id}, 'author', update, callback);
   };
 
   return USER;

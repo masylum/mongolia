@@ -1,0 +1,9 @@
+h2 User details
+!= partial('form', {user: user, action: '/users/' + user._id + '/'})
+
+h2 User Posts
+-if (posts)
+  ul.list
+    -each post in posts
+      li
+        a(href: '/posts/' + post._id + '/')= post.title

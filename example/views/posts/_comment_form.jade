@@ -1,0 +1,10 @@
+-var post = post || {};
+
+form#comment_post(method: 'POST', action: '/posts/' + post._id + '/comments')
+  fieldset
+    .field
+      label(for: 'comment_body') comment body
+      textarea(id: 'comment_body', name: 'comment[body]')
+
+    .operations
+      input(type: 'submit', value: 'submit', class: 'button')

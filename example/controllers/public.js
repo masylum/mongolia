@@ -1,16 +1,26 @@
 module.exports = function (APP) {
   var app = APP.app,
       User = APP.loadModel('user'),
-      Post = APP.loadModel('post');
+      Post = APP.loadModel('post'),
+      Comment = APP.loadModel('comment');
 
   app.get('/', function (req, res) {
-    Post().mongo('findArray', {}, function (error, documents) {
-      console.log('posts:' + documents);
-      // Render with document 
-    });
-    User().mongo('findArray', {}, function (error, documents) {
-      console.log('users:' + documents);
-      // Render with document 
+    var funk = require('funk')();
+
+    Post().mongo('findArray', {}, funk.result('posts'));
+    User().mongo('findArray', {}, funk.result('users'));
+    Comment().mongo('findArray', {}, funk.result('comments'));
+
+    funk.parallel(function () {
+      if (this.errors) {
+        throw Error(this.errors[0]);
+      }
+      res.render('public/index', {
+        title: 'home',
+        users: this.users,
+        posts: this.posts,
+        comments: this.comments
+      });
     });
   });
 };

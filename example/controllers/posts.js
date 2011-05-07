@@ -1,15 +1,35 @@
 module.exports = function (APP) {
   var app = APP.app,
+      User = APP.loadModel('user'),
       Post = APP.loadModel('post'),
-      ObjectID = APP.ObjectID;
+      ObjectID = APP.ObjectID,
+
+      embedAuthor = function (document, callback) {
+        User().mongo('findOne', {_id: new ObjectID(document.author._id)}, function (error, user) {
+          if (error) {
+            callback(error);
+          }
+
+          console.log(user);
+          document.author = Post().getEmbeddedDocument('author', user);
+          callback(null, document);
+        });
+      };
 
   // show post
   app.get('/posts/:id', function (req, res) {
-    var id = req.param('id');
+    var id = req.param('id'),
+        funk = require('funk')();
 
-    Post().mongo('findOne', {_id: new ObjectID(id)}, function (error, document) {
-      console.log('post:' + document);
-      // Render with document 
+    User().mongo('findArray', {}, funk.result('users'));
+    Post().mongo('findOne', {_id: new ObjectID(id)}, funk.result('post'));
+     
+    funk.parallel(function () {
+      res.render('posts/show', {
+        title: this.post.title,
+        post: this.post,
+        users: this.users
+      });
     });
   });
 
@@ -17,20 +37,46 @@ module.exports = function (APP) {
   app.post('/posts', function (req, res) {
     var document = req.param('post');
 
-    Post().mongo('insert', document, function (error, document) {
-      console.log('inserted post:' + document);
-      // Render with document 
+    Post().getCollection(function (error, collection) {
+      document._id = collection.pkFactory.createPk();
+
+      embedAuthor(document, function (error, document) {
+        Post().validateAndInsert(document, function (error, validator) {
+          if (error) {
+            throw error;
+          }
+
+          if (validator.hasErrors()) {
+            // Show flash error
+            console.log(validator.errors);
+            res.redirect('/');
+          } else {
+            res.redirect('/posts/' + document._id + '/');
+          }
+        });
+      });
+
     });
   });
 
   // update post
   app.post('/posts/:id', function (req, res) {
     var id = req.param('id'),
-        post = req.param('post');
+        update = req.param('post');
 
-    Post().mongo('update', {_id: id}, post, function (error, document) {
-      console.log('updated post:' + document);
-      // Render with document 
+    embedAuthor(update, function (error, update) {
+      Post().validateAndUpdate({_id: new ObjectID(id)}, update, function (error, validator) {
+        if (error) {
+          throw error;
+        }
+
+        if (validator.hasErrors()) {
+          // Show flash error
+          console.log(validator.errors);
+        }
+
+        res.redirect('/posts/' + id + '/');
+      });
     });
   });
 
@@ -39,9 +85,17 @@ module.exports = function (APP) {
     var id = req.param('id'),
         comment = req.param('comment');
 
-    Post().add_comment(id, comment, function (error, document) {
-      console.log('commented post:' + document);
-      // Render with document 
+    Post().mongo('findOne', {_id: new ObjectID(id)}, function (error, post) {
+      if (error) {
+        throw error;
+      }
+
+      Post().addComment(post, comment, function (error, document) {
+        if (error) {
+          throw error;
+        }
+        res.redirect('/posts/' + id + '/');
+      });
     });
   });
 };

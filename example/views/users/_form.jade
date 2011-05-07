@@ -1,0 +1,23 @@
+-var user = user || {};
+-var action = action || '/users/';
+
+form#create_user(method: 'POST', action: action)
+  fieldset
+    .field
+      label(for: 'user_name') User name
+      input(id: 'user_name', name: 'user[name]', type: 'text', value: user.name)
+
+    .field
+      label(for: 'user_email') User email
+      input(id: 'user_email', name: 'user[email]', type: 'text', value: user.email)
+
+    .field
+      label(for: 'user_password') User password
+      input(id: 'user_password', name: 'user[password]', type: 'password', value: user.password)
+
+    .field
+      label(for: 'user_password_confirmation') User password
+      input(id: 'user_password_confirmation', name: 'user[password_confirmation]', type: 'password', value: user.password_confirmation)
+
+    .operations
+      input(type: 'submit', value: 'submit', class: 'button')

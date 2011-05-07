@@ -164,12 +164,12 @@ module.exports = function (db) {
 };
 ```
 
-### pushEmbedObject
+### pushEmbeddedDocument
 
-Pushes an embed object.
+Pushes an embedded document.
 
 ``` javascript
-pushEmbedObject(query, data, name, options, callback);
+pushEmbeddedDocument(query, data, name, options, callback);
 ```
 
 Example:
@@ -180,7 +180,7 @@ module.exports = function (db) {
 
   // After creating a post, we want to push it to `users.posts[]`
   POST.afterCreate = function (documents, callback) {
-    User(db).pushEmbedObject({_id: documents[0].author._id}, 'posts', document);
+    User(db).pushEmbeddedDocument({_id: documents[0].author._id}, 'posts', document);
   };
 
   return POST;

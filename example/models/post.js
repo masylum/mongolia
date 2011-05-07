@@ -1,6 +1,7 @@
 module.exports = function (APP) {
   var POST = APP.model(APP.db, 'posts'),
-      Comment = APP.loadModel('comment');
+      Comment = APP.loadModel('comment'),
+      ObjectID = APP.ObjectID;
 
   POST.skeletons = {
     author: ['_id', 'name'],
@@ -8,7 +9,7 @@ module.exports = function (APP) {
   };
   
   POST.validate = function (document, update, callback) {
-    var validator = APP.validator(document);
+    var validator = APP.validator(document, update);
 
     validator.validateExistence({
       title: 'Title is mandatory',
@@ -19,22 +20,13 @@ module.exports = function (APP) {
     callback(null, validator);
   };
 
-  POST.add_comment = function (id, document, callback) {
-    POST.mongo('findOne', {_id: id}, function (error, doc) {
-      if (error) {
-        return callback(error);
-      }
-      document.post = doc;
-      Comment(APP).mongo('insert', document, callback);
-    });
+  POST.addComment = function (post, document, callback) {
+    document.post = Comment().getEmbeddedDocument('post', post);
+    Comment().validateAndInsert(document, callback);
   };
 
-  POST.afterUpdate = function (documents, callback) {
-    var funk = require('funk')();
-    documents.forEach(function (document) {
-      Comment(APP).updateEmbeddedDocument({'post._id': document._id}, 'post', document, {}, funk.nothing());
-    });
-    funk.parallel(callback);
+  POST.afterUpdate = function (query, update, callback) {
+    Comment().updateEmbeddedDocument({'_id': query._id}, 'post', update, {}, callback);
   };
 
   return POST;

@@ -7,7 +7,7 @@ module.exports = function (APP) {
   };
   
   COMMENT.validate = function (document, update, callback) {
-    var validator = APP.validator(document);
+    var validator = APP.validator(document, update);
 
     validator.validateExistence({
       body: 'Body is mandatory',
@@ -20,7 +20,7 @@ module.exports = function (APP) {
   COMMENT.afterCreate = function (documents, callback) {
     var funk = require('funk')();
     documents.forEach(function (document) {
-      Post().pushEmbeddedDocument({_id: document.post._id}, 'comments', document, {}, funk.nothing());
+      Post().pushEmbeddedDocument({_id: document.post._id}, 'comments', document, funk.nothing());
     });
     funk.parallel(callback);
   };
