@@ -5,15 +5,29 @@ var mongodb = require('mongodb'),
     Server = mongodb.Server,
     express = require('express'),
 
-    APP = {},
+    model = require('./../lib/model'),
+    validator = require('./../lib/validator'),
 
     db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {}),
-    app = express.createServer();
+    ObjectID = db.bson_serializer.ObjectID,
 
-APP.app = app;
-APP.db = db;
-APP.options = {
-  port: 3000
+    app = express.createServer(),
+
+    APP = {
+    app: app,
+    db: db,
+    ObjectID: ObjectID,
+    options: {
+      port: 3000
+    },
+    model: model,
+    validator: validator
+  };
+
+APP.loadModel = function (str) {
+  return function () {
+    return require('./models/' + str)(APP);
+  };
 };
 
 // Configure
@@ -29,11 +43,11 @@ app.configure(function () {
 });
 
 // Controllers
-//require('./controller/public')(APP);
-//require('./controller/users')(APP);
-//require('./controller/posts')(APP);
+require('./controllers/public')(APP);
+require('./controllers/users')(APP);
+require('./controllers/posts')(APP);
 
-console.log('Opebning database '.blue);
+console.log('Opening database '.blue);
 db.open(function () {
   app.listen(APP.options.port);
   console.log('Listening port '.green + (APP.options.port).toString().yellow);
