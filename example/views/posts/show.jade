@@ -1,0 +1,12 @@
+h2 Post details
+!= partial('form', {post: post, action: '/posts/' + post._id + '/'})
+
+h2 Author
+-if (post.author)
+  a(href: '/users/' + post.author._id + '/')= post.author.name
+
+h2 Comments
+-if (post.comments)
+  ul.list
+    -each comment in post.comments
+      li= comment.body

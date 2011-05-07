@@ -18,20 +18,20 @@ APP.options = {
 
 // Configure
 app.configure(function () {
-  app.set('views', './views');
+  app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
 
   // middlewares
   app.use(express.favicon());
-  app.use(express['static']('./public'));
+  app.use(express['static'](__dirname + '/public'));
   app.use(express.bodyParser());
   app.use(app.router);
 });
 
 // Controllers
-//require('./controller/public')(APP);
-//require('./controller/users')(APP);
-//require('./controller/posts')(APP);
+require('./controllers/public')(APP);
+require('./controllers/users')(APP);
+require('./controllers/posts')(APP);
 
 console.log('Opebning database '.blue);
 db.open(function () {
