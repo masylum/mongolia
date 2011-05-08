@@ -10,7 +10,6 @@ module.exports = function (APP) {
             callback(error);
           }
 
-          console.log(user);
           document.author = Post().getEmbeddedDocument('author', user);
           callback(null, document);
         });
@@ -65,7 +64,7 @@ module.exports = function (APP) {
         update = req.param('post');
 
     embedAuthor(update, function (error, update) {
-      Post().validateAndUpdate({_id: new ObjectID(id)}, update, function (error, validator) {
+      Post().validateAndUpdate({_id: new ObjectID(id)}, {'$set': update}, function (error, validator) {
         if (error) {
           throw error;
         }

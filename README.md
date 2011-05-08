@@ -44,7 +44,7 @@ module.exports = function (db) {
 ## mongoDB commands
 
 Calls to the database are done using the function `mongo`.
-Mongolia supports all the `collection` methods defiend on the driver plus some custom methods.
+Mongolia proxies all the `collection` methods defiend on the driver plus some custom methods.
 
 ``` javascript
 var Db = require('mongodb/lib/mongodb/db').Db,
@@ -77,29 +77,31 @@ Mongolia provides some useful commands that are not available using the driver.
 
 Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `onCreate(documents, callback)`:           triggered *before* an `insert`.
-  * `afterCreate(documents, callback)`:        triggered *after* an `insert.
-  * `onUpdate(document, update, callback)`:    triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(document, update, callback)`: triggered *after* an `update` or `findAndModify` command.
-  * `onRemove(query, callback)`:               triggered *before* a `remove` command.
-  * `afterRemove(query, callback)`:            triggered *after* a `remove` command.
+  * `beforeInsert(documents, callback)`:        triggered *before* an `insert`.
+  * `afterInsert(documents, callback)`:         triggered *after* an `insert.
+
+  * `beforeUpdate(document, update, callback)`: triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(document, update, callback)`:  triggered *after* an `update` or `findAndModify` command.
+
+  * `beforeRemove(query, callback)`:            triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`:             triggered *after* a `remove` command.
 
 Example:
 
 ``` javascript
 module.exports = function (db) {
-  var COMMENT = require('mongolia').model(db, 'comments');
+  var COMMENT = require('mongolia').model(db, 'comments'),
+      Post = require('./post');
 
-  COMMENT.onCreate = function (documents, callback) {
+  COMMENT.beforeInsert = function (documents, callback) {
     documents.forEach(function (doc) {
       doc.created_at = new Date();
     });
     callback(null, documents);
   };
 
-  COMMENT.atferCreate = function (documents, callback) {
-    var post = require('./post')(this.db);
-    post.mongo('update', {_id: documents[0].post_id}, {'$inc': {num_posts: 1}}, callback);
+  COMMENT.atferInsert = function (documents, callback) {
+    Post(db).mongo('update', {_id: documents[0].post._id}, {'$inc': {num_posts: 1}}, callback);
   };
 
   return COMMENT;
@@ -123,7 +125,7 @@ module.exports = function (db) {
   var POST = require('mongolia').model(db, 'posts');
 
   // only embed the comment's _id, and title
-  POST.skeletons= {
+  POST.skeletons = {
     comment: ['_id', 'title']
   };
 
@@ -146,7 +148,7 @@ console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
 Updates an embed object.
 
 ``` javascript
-updateEmbeddedDocument(query, document_name, document, options, callback);
+Model.updateEmbeddedDocument(query, document_name, document, options, callback);
 ```
 
 Example:
@@ -169,7 +171,7 @@ module.exports = function (db) {
 Pushes an embedded document.
 
 ``` javascript
-pushEmbeddedDocument(query, data, name, options, callback);
+Model.pushEmbeddedDocument(query, data, name, options, callback);
 ```
 
 Example:
@@ -178,9 +180,9 @@ Example:
 module.exports = function (db) {
   var POST = require('mongolia')(db, 'posts');
 
-  // After creating a post, we want to push it to `users.posts[]`
-  POST.afterCreate = function (documents, callback) {
-    User(db).pushEmbeddedDocument({_id: documents[0].author._id}, 'posts', document);
+  // After inserting a post, we want to push it to `users.posts[]`
+  POST.afterInsert = function (documents, callback) {
+    User(db).pushEmbeddedDocument({_id: documents[0].author._id}, 'posts', document, callback);
   };
 
   return POST;
@@ -192,8 +194,8 @@ module.exports = function (db) {
 Mongolia provides with two methods that allow you to create and update using the `validator`.
 
 ``` javascript
-validateAndInsert(document, callback(error, validator));
-validateAndUpdate(document, update, callback(error, validator));
+Model.validateAndInsert(document, callback(error, validator));
+Model.validateAndUpdate(document, update, options, callback(error, validator));
 ```
 
 In order to validate an insertion/update, the model have to implement a `validate` function on your model.
@@ -210,7 +212,7 @@ module.exports = function (db) {
   var POST = require('mongolia').model(db, 'posts');
 
   POST.validate = function (document, update, callback) {
-    var validator = require('mongolia').validator(document, data);
+    var validator = require('mongolia').validator(document, update);
 
     validator.validateRegex({
       title: [validator.regex.title, 'Incorrect title'],
@@ -310,8 +312,8 @@ Example using some of the validator features:
 var User = function (db) {
   var USER = require('mongolia').model(db, 'users');
 
-  USER.validate = function (element, data, callback) {
-    var validator = require('mongolia').validator(element, data);
+  USER.validate = function (document, update, callback) {
+    var validator = require('mongolia').validator(document, update);
 
     validator.validateRegex({
       name: [validator.regex.username, 'Incorrect name'],
@@ -326,14 +328,14 @@ var User = function (db) {
       });
     }
 
-    if (!data.tags || data.tags.length <= 0) {
+    if (!update.tags || update.tags.length <= 0) {
       validator.addError('tags', 'Select at least one tag');
     }
 
     if (validator.isUpdating()) {
       validator.validateQuery({
-        name: [this, {name: data.name}, false, 'There is already a user with this name'],
-        email: [this, {email: data.email}, false, 'There is already a user with this email']
+        name: [this, {name: update.name}, false, 'There is already a user with this name'],
+        email: [this, {email: update.email}, false, 'There is already a user with this email']
       }, function () {
         callback(null, validator);
       });

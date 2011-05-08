@@ -83,14 +83,14 @@ testosterone
         },
         args = ['fleiba', cb];
 
-    gently.expect(Model, 'beforeCreate', function (ar, callback) {
+    gently.expect(Model, 'beforeInsert', function (ar, callback) {
       assert.deepEqual(ar, args[0]);
 
       gently.expect(Collection.insert, 'apply', function (_collection, _args) {
         assert.deepEqual(_collection, Collection);
         assert.deepEqual(_args[0], ['document1', 'document2']);
 
-        gently.expect(Model, 'afterCreate', function (_docs, _callback) {
+        gently.expect(Model, 'afterInsert', function (_docs, _callback) {
           assert.deepEqual(_docs, ['document1', 'document2']);
           _callback(null);
           assert.ok(callback_called);

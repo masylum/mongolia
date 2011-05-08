@@ -13,14 +13,14 @@ testosterone
         val2 = Validator(doc, update);
 
     assert.deepEqual(val.errors, {});
-    assert.deepEqual(val.model, {});
-    assert.deepEqual(val.data, update);
-    assert.deepEqual(val.updated_model, update);
+    assert.deepEqual(val.document, {});
+    assert.deepEqual(val.update, update);
+    assert.deepEqual(val.updated_document, update);
 
     assert.deepEqual(val2.errors, {});
-    assert.deepEqual(val2.model, doc);
-    assert.deepEqual(val2.data, update);
-    assert.deepEqual(val2.updated_model, {foo: 'bar', hey: 'joe'});
+    assert.deepEqual(val2.document, doc);
+    assert.deepEqual(val2.update, update);
+    assert.deepEqual(val2.updated_document, {foo: 'bar', hey: 'joe'});
   })
 
   .add('`addError` adds a validation error', function () {

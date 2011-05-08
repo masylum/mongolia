@@ -48,7 +48,7 @@ module.exports = function (APP) {
     var id = req.param('id'),
         update = req.param('user');
 
-    User().validateAndUpdate({_id: new ObjectID(id)}, update, function (error, validator) {
+    User().validateAndUpdate({_id: new ObjectID(id)}, {'$set': update}, function (error, validator) {
       if (error) {
         throw error;
       }

@@ -8,7 +8,7 @@
   "dependencies": { "mongodb": ">=0.9.3", "funk": ">=1.0.1"},
   "devDependencies": {
     "testosterone": ">= 1.2.0",
-    "gently": ">= 0.8.0"
+    "gently": ">= 0.9.0"
   },
 
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
