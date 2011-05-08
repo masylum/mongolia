@@ -9,41 +9,33 @@
                                            "Y88888P'
 
 
-Flexible wrapper for the nodejs mongoDB driver.
-Its not a ORM, but it can be used to handle the logic of your models.
-No magic, no pain.
+Mongolia is a layer that sits on top of the mongo driver and helps you dealing with your data logic.
+Mongolia is not an ORM. Models contains no state, just logic.
+Mongolia contains no magic.
 
 ## Install
 
 ``` bash
-$ npm install mongolia
+npm install mongolia
 ```
 
 Mongolia contains two independent modules:
 
-  * `model`: An object representing a collection with some hooks of mongoDB calls.
+  * `model`: An object representing a collection with some hooks of mongo calls.
   * `validator`: An object that validates mongoDB documents and returns errors if found.
 
 # Model
 
-Each model has a collection name and a reference to the database.
-
-Models don't map data from mongoDB, they are just a layer to centralize all the logic.
+Models are attached to collections.
+Models don't map data from the db, they just define the logic.
 
 ``` javascript
-module.exports = function (db) {
-  // our user model will do mongoDB calls using 'users' collection
-  var USER = require('mongolia').model(db, 'users');
-
-  // implement some user logic
-
-  return USER;
-};
+var USER = require('mongolia').model(db, 'users');
 ```
 
-## mongoDB commands
+## mongo commands
 
-Calls to the database are done using the function `mongo`.
+Calls to the db are done using the function `mongo`.
 Mongolia proxies all the `collection` methods defiend on the driver plus some custom methods.
 
 ``` javascript
@@ -52,12 +44,11 @@ var Db = require('mongodb/lib/mongodb/db').Db,
     db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}));
 
 db.open(function () {
+  var User = require('./user.js')(db);
 
-    var User = require('./user.js')(db);
-    User.mongo('findOne', {name: 'foo'}, function (error, user) {
-      console.log(user);
-    });
-
+  User.mongo('findOne', {name: 'foo'}, function (error, user) {
+    console.log(user);
+  });
 });
 ```
 
@@ -65,7 +56,7 @@ All the `collection` methods from the driver are supported.
 
 If you need more information visit the [driver](http://github.com/christkv/node-mongodb-native) documentation
 
-## Custom mongoDB commands
+## Custom mongo collection commands
 
 Mongolia provides some useful commands that are not available using the driver.
 
@@ -73,63 +64,68 @@ Mongolia provides some useful commands that are not available using the driver.
   * `mapReduceArray`: mapReduce that returns an array with the results.
   * `mapReduceCursor`: mapReduce that returns a cursor.
 
+You can add your own custom methods by adding functions to the `collection_proxy` attribute in your models.
+
+``` javascript
+// Implement a custom query => Post.mongo('findByAuthor', author_id, callback)
+Post.collection_proxy.findByAuthor = function (model, collection, args, callback) {
+  args[0] = {'author._id': args[0]};
+  args[args.length - 1] = function (error, cursor) {
+    cursor.sort(['created_at', 1]).toArray(callback);
+  };
+  collection[fn].apply(collection, args);
+}
+```
+
 ## Hooks
 
 Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `beforeInsert(documents, callback)`:        triggered *before* an `insert`.
-  * `afterInsert(documents, callback)`:         triggered *after* an `insert.
+  * `beforeInsert(documents, callback)`: triggered *before* an `insert`.
+  * `afterInsert(documents, callback)`: triggered *after* an `insert.
 
-  * `beforeUpdate(document, update, callback)`: triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(document, update, callback)`:  triggered *after* an `update` or `findAndModify` command.
+  * `beforeUpdate(query, update, callback)`: triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(query, update, callback)`: triggered *after* an `update` or `findAndModify` command.
 
-  * `beforeRemove(query, callback)`:            triggered *before* a `remove` command.
-  * `afterRemove(query, callback)`:             triggered *after* a `remove` command.
+  * `beforeRemove(query, callback)`: triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
 
 Example:
 
 ``` javascript
-module.exports = function (db) {
-  var COMMENT = require('mongolia').model(db, 'comments'),
-      Post = require('./post');
+var COMMENT = require('mongolia').model(db, 'comments'),
+    Post = require('./post');
 
-  COMMENT.beforeInsert = function (documents, callback) {
-    documents.forEach(function (doc) {
-      doc.created_at = new Date();
-    });
-    callback(null, documents);
-  };
+COMMENT.beforeInsert = function (documents, callback) {
+  documents.forEach(function (doc) {
+    doc.created_at = new Date();
+  });
+  callback(null, documents);
+};
 
-  COMMENT.atferInsert = function (documents, callback) {
-    Post(db).mongo('update', {_id: documents[0].post._id}, {'$inc': {num_posts: 1}}, callback);
-  };
-
-  return COMMENT;
+COMMENT.atferInsert = function (documents, callback) {
+  Post(db).mongo('update', {_id: documents[0].post._id}, {'$inc': {num_posts: 1}}, callback);
 };
 ```
 
 ## Embedded documents
 
-Mongolia helps you to _denormalize_ your mongoDB database.
+Mongolia helps you to _denormalize_ your mongo database.
 
 ### getEmbeddedDocument
 
-Filters document following the `skeletons` directive.
+Filters document following the `skeletons` attribute.
 
     getEmbeddedDocument(name, object, scope [, dot_notation]);
 
 Example:
 
 ``` javascript
-module.exports = function (db) {
-  var POST = require('mongolia').model(db, 'posts');
+var POST = require('mongolia').model(db, 'posts');
 
-  // only embed the comment's _id, and title
-  POST.skeletons = {
-    comment: ['_id', 'title']
-  };
-
-  return POST;
+// only embed the comment's _id, and title
+POST.skeletons = {
+  comment: ['_id', 'title']
 };
 
 var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
@@ -191,7 +187,7 @@ module.exports = function (db) {
 
 ## Create and update using validations
 
-Mongolia provides with two methods that allow you to create and update using the `validator`.
+Mongolia provides two methods that allow you to create and update using the `validator`.
 
 ``` javascript
 Model.validateAndInsert(document, callback(error, validator));
@@ -201,7 +197,7 @@ Model.validateAndUpdate(document, update, options, callback(error, validator));
 In order to validate an insertion/update, the model have to implement a `validate` function on your model.
 
 ``` javascript
-validate(document, update, callback);
+validate(query, update, callback);
 ```
 
 Example:
@@ -211,8 +207,8 @@ Example:
 module.exports = function (db) {
   var POST = require('mongolia').model(db, 'posts');
 
-  POST.validate = function (document, update, callback) {
-    var validator = require('mongolia').validator(document, update);
+  POST.validate = function (query, update, callback) {
+    var validator = require('mongolia').validator(query, update);
 
     validator.validateRegex({
       title: [validator.regex.title, 'Incorrect title'],
@@ -347,3 +343,34 @@ var User = function (db) {
   return USER;
 };
 ```
+## Contributors
+
+In no specific order.
+
+  * Josep M. Bach ([txus](http://github.com/txus))
+  * Pau Ramon ([masylum](http://github.com/masylum))
+
+## License
+
+(The MIT License)
+
+Copyright (c) 2010-2011 Pau Ramon Revilla &lt;masylum@gmail.com&gt;
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

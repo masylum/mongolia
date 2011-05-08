@@ -201,6 +201,16 @@ form .operations {
   padding: 10px;
   width: 562px;
 }
+
+#forms {
+  float: left;
+  margin-right: 40px;
+}
+
+#lists {
+  float: left;
+}
+
 .button {
   -webkit-border-radius: 8px;
   -moz-border-radius: 8px;

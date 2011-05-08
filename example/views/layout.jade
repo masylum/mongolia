@@ -4,7 +4,6 @@ html
     title= title || ''
     link(rel: 'stylesheet', href: '/css/reset.css' )
     link(rel: 'stylesheet', href: '/css/global.css' )
-    link(rel: 'shortcut icon', href: '/favicon.ico')
 
     -var css
     -if(css)
@@ -20,11 +19,3 @@ html
 
         #content
           != body
-
-  -var js
-  -if(js)
-    script(src: '/javascripts/vendor/jquery.js' )
-    script(src: '/javascripts/global.js' )
-
-    -each file in js
-      script(src: '/javascripts/' + file + '.js' )

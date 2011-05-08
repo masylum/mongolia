@@ -1,28 +1,26 @@
 require('colors');
 
-var mongodb = require('mongodb'),
-    Db = mongodb.Db,
-    Server = mongodb.Server,
-    express = require('express'),
+var mongodb = require('mongodb')
+  , Db = mongodb.Db
+  , Server = mongodb.Server
+  , express = require('express')
 
-    model = require('./../lib/model'),
-    validator = require('./../lib/validator'),
+  , model = require('./../lib/model')
+  , validator = require('./../lib/validator')
 
-    db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {}),
-    ObjectID = db.bson_serializer.ObjectID,
+  , db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}), {})
+  , ObjectID = db.bson_serializer.ObjectID
 
-    app = express.createServer(),
+  , app = express.createServer()
 
-    APP = {
-    app: app,
-    db: db,
-    ObjectID: ObjectID,
-    options: {
-      port: 3000
-    },
-    model: model,
-    validator: validator
-  };
+  , APP = {
+      app: app
+    , db: db
+    , ObjectID: ObjectID
+    , options: {port: 3000}
+    , model: model
+    , validator: validator
+    };
 
 APP.loadModel = function (str) {
   return function () {

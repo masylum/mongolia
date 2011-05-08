@@ -1,16 +1,19 @@
 {
   "name": "mongolia",
-  "description": "Mongodb driver wrapper. Acts as model.",
-  "version": "0.0.10",
+  "description": "Layer on top of the mongodb driver to implement data logic.",
+  "version": "1.0.0",
   "author": "Pau Ramon <masylum@gmail.com>",
-  "keywords": ["mongo", "mongodb", "orm", "database", "db"],
+  "contributors": [
+      { "name": "Pau Ramon", "email": "masylum@gmail.com" },
+      { "name": "Josep M. Bach", "email": "josep.m.bach@gmail.com" }
+  ],
+  "keywords": ["mongo", "mongodb", "models", "database", "db"],
   "main": "./index",
   "dependencies": { "mongodb": ">=0.9.3", "funk": ">=1.0.1"},
   "devDependencies": {
     "testosterone": ">= 1.2.0",
     "gently": ">= 0.9.0"
   },
-
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
-  "engines": { "node": ">= 0.2.0" }
+  "engines": { "node": ">= 0.4.0" }
 }

@@ -1,28 +1,27 @@
-h2 Create user
-!= partial('users/form')
+#forms
+  != partial('users/form')
+  != partial('posts/form')
 
-h2 List users
--if(users)
-  ul.list
-    -each user in users
-      li
-        a(href: '/users/' + user._id + '/')= user.name
+#lists
+  h2 List users
+  -if(users)
+    ul.list
+      -each user in users
+        li
+          a(href: '/users/' + user._id + '/')= user.name
 
-h2 Create posts
-!= partial('posts/form')
+  h2 List posts
+  -if(posts)
+    ul.list
+      -each post in posts
+        li
+          a(href: '/posts/' + post._id + '/')= post.title
 
-h2 List posts
--if(posts)
-  ul.list
-    -each post in posts
-      li
-        a(href: '/posts/' + post._id + '/')= post.title
-
-h2 List comments
--if(comments)
-  ul.list
-    -each comment in comments
-      li
-        span= comment.body
-        | 
-        a(href: '/posts/' + comment.post._id + '/')= comment.post.title
+  h2 List comments
+  -if(comments)
+    ul.list
+      -each comment in comments
+        li
+          span= comment.body
+          | 
+          a(href: '/posts/' + comment.post._id + '/')= comment.post.title

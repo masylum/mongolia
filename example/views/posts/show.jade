@@ -1,13 +1,14 @@
-h2 Post details
-!= partial('form', {post: post, action: '/posts/' + post._id + '/'})
-!= partial('comment_form', {post: post})
+#forms
+  != partial('form', {post: post, action: '/posts/' + post._id + '/'})
+  != partial('comment_form', {post: post})
 
-h2 Author
--if (post.author)
-  a(href: '/users/' + post.author._id + '/')= post.author.name
+#lists
+  h2 Author
+  -if (post.author)
+    a(href: '/users/' + post.author._id + '/')= post.author.name
 
-h2 Comments
--if (post.comments)
-  ul.list
-    -each comment in post.comments
-      li= comment.body
+  h2 Comments
+  -if (post.comments)
+    ul.list
+      -each comment in post.comments
+        li= comment.body

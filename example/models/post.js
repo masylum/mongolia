@@ -7,7 +7,7 @@ module.exports = function (APP) {
     author: ['_id', 'name'],
     comments: ['_id', 'body']
   };
-  
+
   POST.validate = function (document, update, callback) {
     var validator = APP.validator(document, update);
 
@@ -20,9 +20,9 @@ module.exports = function (APP) {
     callback(null, validator);
   };
 
-  POST.addComment = function (post, document, callback) {
-    document.post = Comment().getEmbeddedDocument('post', post);
-    Comment().validateAndInsert(document, callback);
+  POST.addComment = function (post, comment, callback) {
+    comment.post = Comment().getEmbeddedDocument('post', post);
+    Comment().validateAndInsert(comment, callback);
   };
 
   POST.afterUpdate = function (query, update, callback) {
