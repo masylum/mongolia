@@ -1,0 +1,21 @@
+-var post = post || {};
+-var action = action || '/posts/';
+
+form#create_post(method: 'POST', action: action)
+  fieldset
+    .field
+      label(for: 'post_title) Post title
+      input(id: 'post_title', name: 'post[title]', value: post.title)
+
+    .field
+      label(for: 'post_body') Post body
+      textarea(id: 'post_body', name: 'post[body]')= post.body || ''
+
+    .field
+      label(for: 'post_author_id') Post author
+      select(id: 'post_author_id', name: 'post[author][_id]')
+        -each user in users
+          option(value: user._id)= user.name
+
+    .operations
+      input(type: 'submit', value: 'submit', class: 'button')

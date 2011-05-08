@@ -9,54 +9,63 @@
                                            "Y88888P'
 
 
-Flexible wrapper for the nodejs MongoDB driver.
+Flexible wrapper for the nodejs mongoDB driver.
 Its not a ORM, but it can be used to handle the logic of your models.
 No magic, no pain.
 
 ## Install
 
-    $ npm install mongolia
+``` bash
+$ npm install mongolia
+```
 
 Mongolia contains two independent modules:
 
-  * `Model`: An object representing a collection with some wrappers/hooks of MongoDB calls.
-  * `Validator`: An object that validates MongoDB documents and returns errors if found.
+  * `model`: An object representing a collection with some hooks of mongoDB calls.
+  * `validator`: An object that validates mongoDB documents and returns errors if found.
 
 # Model
 
 Each model has a collection name and a reference to the database.
 
-Models don't map data from MongoDB, they are just a layer to centralize all the logic.
+Models don't map data from mongoDB, they are just a layer to centralize all the logic.
 
-    var User = function (db) {
-      // our user model will do MongoDB calls using 'users' collection
-      var USER = require('mongolia').model(db, 'users');
+``` javascript
+module.exports = function (db) {
+  // our user model will do mongoDB calls using 'users' collection
+  var USER = require('mongolia').model(db, 'users');
 
-      // implement some user logic
+  // implement some user logic
 
-      return USER;
-    };
+  return USER;
+};
+```
 
-## MongoDB commands
+## mongoDB commands
 
-Calls to the database are done using the function `mongoCall`.
+Calls to the database are done using the function `mongo`.
+Mongolia supports all the `collection` methods defiend on the driver plus some custom methods.
 
-    var Db = require('mongodb/lib/mongodb/db').Db,
-        Server = require('mongodb/lib/mongodb/connection').Server,
-        db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}));
+``` javascript
+var Db = require('mongodb/lib/mongodb/db').Db,
+    Server = require('mongodb/lib/mongodb/connection').Server,
+    db = new Db('blog', new Server('localhost', 27017, {auto_reconnect: true, native_parser: true}));
 
-    db.open(function () {
-        var User = require('./user.js')(db);
-        User.mongoCall('find', {name: 'foo'}, function (error, user) {
-          console.log(user);
-        });
+db.open(function () {
+
+    var User = require('./user.js')(db);
+    User.mongo('findOne', {name: 'foo'}, function (error, user) {
+      console.log(user);
     });
 
-All the collection.js functions from the driver are supported.
+});
+```
 
-If you need more information visit the [official driver](http://github.com/christkv/node-mongodb-native) documentation
+All the `collection` methods from the driver are supported.
 
-## Custom MongoDB commands
+If you need more information visit the [driver](http://github.com/christkv/node-mongodb-native) documentation
+
+## Custom mongoDB commands
 
 Mongolia provides some useful commands that are not available using the driver.
 
@@ -66,225 +75,273 @@ Mongolia provides some useful commands that are not available using the driver.
 
 ## Hooks
 
-Mongolia let you define some hooks on your models that will be triggered after a MongoDB command.
+Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
 
-  * `onCreate(element)`: triggered *before* an `insert`. If multiples elements are inserted, it will be called for each of them.
-  * `afterCreate(element)`: triggered *after* an `insert. If multiples elements are inserted, it will be called for each of them.
-  * `onUpdate(update)`: triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(update)`: triggered *after* an `update` or `findAndModify` command. // Not yet implemented!
+  * `onCreate(documents, callback)`:           triggered *before* an `insert`.
+  * `afterCreate(documents, callback)`:        triggered *after* an `insert.
+  * `onUpdate(document, update, callback)`:    triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(document, update, callback)`: triggered *after* an `update` or `findAndModify` command.
+  * `onRemove(query, callback)`:               triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`:            triggered *after* a `remove` command.
 
 Example:
 
-    var Comment = function (db) {
-      var COMMENT = require('mongolia').model(db, 'comments');
+``` javascript
+module.exports = function (db) {
+  var COMMENT = require('mongolia').model(db, 'comments');
 
-      COMMENT.onCreate = function (element) {
-        element.created_at = new Date();
-      };
+  COMMENT.onCreate = function (documents, callback) {
+    documents.forEach(function (doc) {
+      doc.created_at = new Date();
+    });
+    callback(null, documents);
+  };
 
-      COMMENT.atferCreate = function (element) {
-        var post = require('./models/post')(this.db);
-        post.mongoCall('update', {_id: element.post_id}, {'$inc': {num_posts: 1}});
-      };
+  COMMENT.atferCreate = function (documents, callback) {
+    var post = require('./post')(this.db);
+    post.mongo('update', {_id: documents[0].post_id}, {'$inc': {num_posts: 1}}, callback);
+  };
 
-      return COMMENT;
-    };
+  return COMMENT;
+};
+```
 
 ## Embedded documents
 
-Mongolia helps you to denormalize your MongoDB database.
+Mongolia helps you to _denormalize_ your mongoDB database.
 
-### setEmbedObject
+### getEmbeddedDocument
 
-Filters an embed object following the `skeletons` directive.
+Filters document following the `skeletons` directive.
 
-    setEmbedObject(name, object);
+    getEmbeddedDocument(name, object, scope [, dot_notation]);
 
 Example:
 
-    var Post = function (db) {
-      var POST = require('mongolia').model(db, 'posts');
+``` javascript
+module.exports = function (db) {
+  var POST = require('mongolia').model(db, 'posts');
 
-      // only embed the comment's _id, and title
-      POST.skeletons= {
-        comment: ['_id', 'title']
-      };
+  // only embed the comment's _id, and title
+  POST.skeletons= {
+    comment: ['_id', 'title']
+  };
 
-      return POST;
-    };
+  return POST;
+};
 
-    var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
-    Post(db).setEmbedObject('comment', comment) // => {'_id': 1, title: 'foo'};
+var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
+console.log(Post(db).getEmbeddedDocument('comment', comment));
+// outputs => {'_id': 1, title: 'foo'};
 
-### updateEmbedObject
+console.log(Post(db).getEmbeddedDocument('comment', comment, 'post'));
+// outputs => {post: {'_id': 1, title: 'foo'}};
+
+console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
+// outputs => {'post._id': 1, 'post.title': 'foo'};
+```
+
+### updateEmbeddedDocument
 
 Updates an embed object.
 
-    updateEmbedObject(model, data, name, options, callback);
+``` javascript
+updateEmbeddedDocument(query, document_name, document, options, callback);
+```
 
 Example:
 
-    var User = function (db) {
-      var USER = require('mongolia').model(db, 'users');
+``` javascript
+module.exports = function (db) {
+  var USER = require('mongolia').model(db, 'users');
 
-      // After updating a user, we want to update denormalized Post.author foreach post
-      USER.afterUpdate = function (element, update) {
-        Post(db).updateEmbedObject(element, update, 'author', null, function (error, docs) {
-          console.log(docs);
-        });
-      };
+  // After updating a user, we want to update denormalized Post.author foreach post
+  USER.afterUpdate = function (query, update, callback) {
+    Post(db).updateEmbeddedDocument({_id: query._id}, 'author', update, {}, callback);
+  };
 
-      return USER;
-    };
+  return USER;
+};
+```
 
-### pushEmbedObject
+### pushEmbeddedDocument
 
-Pushes an embed object.
+Pushes an embedded document.
 
-    pushEmbedObject(model, data, name, options, callback);
+``` javascript
+pushEmbeddedDocument(query, data, name, options, callback);
+```
 
 Example:
 
-    var Post = function (db) {
-      var POST = require('mongolia')(db, 'posts');
+``` javascript
+module.exports = function (db) {
+  var POST = require('mongolia')(db, 'posts');
 
-      POST.afterCreate = function (element) {
-        User(db).pushEmbedObject(element.author, element, 'posts', null, function (error, doc) {
-          // User.posts[] now contains this post
-        });
-      };
+  // After creating a post, we want to push it to `users.posts[]`
+  POST.afterCreate = function (documents, callback) {
+    User(db).pushEmbeddedDocument({_id: documents[0].author._id}, 'posts', document);
+  };
 
-      return POST;
+  return POST;
+}
+```
+
+## Create and update using validations
+
+Mongolia provides with two methods that allow you to create and update using the `validator`.
+
+``` javascript
+validateAndInsert(document, callback(error, validator));
+validateAndUpdate(document, update, callback(error, validator));
+```
+
+In order to validate an insertion/update, the model have to implement a `validate` function on your model.
+
+``` javascript
+validate(document, update, callback);
+```
+
+Example:
+
+``` javascript
+// post.js
+module.exports = function (db) {
+  var POST = require('mongolia').model(db, 'posts');
+
+  POST.validate = function (document, update, callback) {
+    var validator = require('mongolia').validator(document, data);
+
+    validator.validateRegex({
+      title: [validator.regex.title, 'Incorrect title'],
+      body: [/.{4,200}/, 'Incorrect body'],
+    });
+
+    if (!update.body === 'Lorem ipsum') {
+      validator.addError('body', 'You can be a little bit more creative');
     }
 
+    callback(null, validator);
+  }
 
-## Create and update instances
+  return POST;
+};
 
-Mongolia provides with two methods that allow you to create and update using the Validator.
+// app.js
+var Post = require('./post.js');
 
-Its important to notice that createInstance and updateInstance are asynchronous methods as some validations may require database call.
-
-    createInstance(element, callback);
-    updateInstance(element, update, callback);
-
-The callback returns _error_, and a _validator_ object.
-
-Those two methods trigger onCreateInstance/onUpdateInstance, asynchronously. [this will be deprecated and replaced with async onCreate and onUpdate soon]
-
-In order to validate an insertion/update, the model have to implement a _validate_ function on your model.
-
-    validate(element, update, callback);
-
-Example:
-
-    var Post = function (db) {
-      var POST = require('mongolia').model(db, 'posts');
-
-      POST.validate = function (element, update, callback) {
-        var validator = require('mongolia').validator(element, data);
-
-        validator.validateRegex({
-          title: [validator.regex.title, 'Incorrect title'],
-          body: [/.{4,200}/, 'Incorrect body'],
-        });
-
-        if (!update.body === 'Lorem ipsum') {
-          validator.addError('body', 'You can be a little bit more creative');
-        }
-        callback(null, validator);
-      }
-
-      return POST;
-    };
-
-    var post = {title: 'This is a post', body: 'Lorem ipsum'};
-
-    Post(db).createInstance(post, function (error, validator) {
-      if (validator.hasErrors()) {
-        console.log(validator.errors);
-      } else {
-        console.log(validator.updated_model);
-      }
-    });
+Post(db).validateAndInsert(
+  {title: 'This is a post', body: 'Lorem ipsum'},
+  function (error, validator) {
+    if (validator.hasErrors()) {
+      console.log(validator.errors);
+    } else {
+      console.log(validator.updated_model);
+    }
+  }
+);
+```
 
 # Validator
 
-    isUpdating()
+``` javascript
+isUpdating()
+```
 
 Returns true if the validator is handling an updateInstance operation.
 
-    isInserting()
+``` javascript
+isInserting()
+```
 
 Returns true if the validator is handling an createInstance operation.
 
-    attrChanged(attr)
+``` javascript
+attrChanged(attr)
+```
 
 Returns true if the attributed changed
 
-    addError(field, value)
+``` javascript
+addError(field, value)
+```
 
 Adds an error to your validator. Accept dot notation to add nested errors.
 
-    hasError(field)
+``` javascript
+hasError(field)
+```
 
 Returns true if the attributed failed a validation. Accept dot notation to check nested errors.
 
-    hasErrors()
+``` javascript
+hasErrors()
+```
 
 Returns true if any attributed failed a validation
 
-    validateExistence(validations)
+``` javascript
+validateExistence(validations)
+```
 
 It fills your validator with errors if any of the elements are empty
 
-    validateRegex(validations)
+``` javascript
+validateRegex(validations)
+```
 
 It fills your validator with errors if any of the elements fail the regex
 
-    validateConfirmation(validations)
+``` javascript
+validateConfirmation(validations)
+```
 
 It fills your validator with errors if any of the elements fail the confirmation (good for passwords)
 
-    validateQuery(validations, callback)
+``` javascript
+validateQuery(validations, callback)
+```
 
 It fills your validator with errors if any of the queries fail (good to avoid duplicated data)
 
 Example using some of the validator features:
 
-    var User = function (db) {
-      var USER = require('mongolia').model(db, 'users');
+``` javascript
+var User = function (db) {
+  var USER = require('mongolia').model(db, 'users');
 
-      USER.validate = function (element, data, callback) {
-        var validator = require('mongolia').validator(element, data);
+  USER.validate = function (element, data, callback) {
+    var validator = require('mongolia').validator(element, data);
 
-        validator.validateRegex({
-          name: [validator.regex.username, 'Incorrect name'],
-          email: [validator.regex.email, 'Incorrect email'],
-          password: [validator.regex.password, 'Incorrect password'],
-          description: [validator.regex.description, 'Incorrect description']
-        });
+    validator.validateRegex({
+      name: [validator.regex.username, 'Incorrect name'],
+      email: [validator.regex.email, 'Incorrect email'],
+      password: [validator.regex.password, 'Incorrect password'],
+      description: [validator.regex.description, 'Incorrect description']
+    });
 
-        if (validator.attrChanged('password')) {
-          validator.validateConfirmation({
-            'password': ['password_confirmation', 'Passwords must match']
-          });
-        }
+    if (validator.attrChanged('password')) {
+      validator.validateConfirmation({
+        'password': ['password_confirmation', 'Passwords must match']
+      });
+    }
 
-        if (!data.tags || data.tags.length <= 0) {
-          validator.addError('tags', 'Select at least one tag');
-        }
+    if (!data.tags || data.tags.length <= 0) {
+      validator.addError('tags', 'Select at least one tag');
+    }
 
-        if (validator.isUpdating()) {
-          validator.validateQuery({
-            name: [this, {name: data.name}, false, 'There is already a user with this name'],
-            email: [this, {email: data.email}, false, 'There is already a user with this email']
-          }, function () {
-            callback(null, validator);
-          });
-        } else {
-          callback(null, validator);
-        }
-      }
+    if (validator.isUpdating()) {
+      validator.validateQuery({
+        name: [this, {name: data.name}, false, 'There is already a user with this name'],
+        email: [this, {email: data.email}, false, 'There is already a user with this email']
+      }, function () {
+        callback(null, validator);
+      });
+    } else {
+      callback(null, validator);
+    }
+  }
 
-      return USER;
-    };
+  return USER;
+};
+```

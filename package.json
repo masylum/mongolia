@@ -5,7 +5,12 @@
   "author": "Pau Ramon <masylum@gmail.com>",
   "keywords": ["mongo", "mongodb", "orm", "database", "db"],
   "main": "./index",
-  "dependencies": { "mongodb": ">=0.7.9", "funk": ">=0.0.2"},
+  "dependencies": { "mongodb": ">=0.9.3", "funk": ">=1.0.1"},
+  "devDependencies": {
+    "testosterone": ">= 1.2.0",
+    "gently": ">= 0.8.0"
+  },
+
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.2.0" }
 }
