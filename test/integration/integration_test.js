@@ -27,18 +27,18 @@ db.open(function (error) {
 
     testosterone
 
-      .add('`Insert` documents with `before/afterCreate` hooks', function (done) {
+      .add('`Insert` documents with `before/afterInsert` hooks', function (done) {
         var User = Model(db, 'users'),
             Country = Model(db, 'countries');
 
-        User.beforeCreate = function (documents, callback) {
+        User.beforeInsert = function (documents, callback) {
           documents.forEach(function (document) {
             document.has_country = true;
           });
           callback(null, documents);
         };
 
-        User.afterCreate = function (documents, callback) {
+        User.afterInsert = function (documents, callback) {
           documents.forEach(function (document) {
             document.comments = [];
           });
@@ -65,8 +65,8 @@ db.open(function (error) {
             Country = Model(db, 'countries');
 
         Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
-          User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error, update) {
-            assert.equal(update.$set['country.name'], 'France');
+          User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error, ret) {
+            assert.equal(ret, 1);
 
             User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
               assert.equal(doc.country.name, 'France');
@@ -80,12 +80,12 @@ db.open(function (error) {
             funk = require('funk')(),
             query = {name: 'zemba'};
 
-        User.pushEmbeddedDocument(query, 'comments', {body: 'bla bla bla'}, {}, funk.add(function (error, doc) {
-          assert.equal(doc.$push['comments.body'], 'bla bla bla');
+        User.pushEmbeddedDocument(query, 'comments', {body: 'bla bla bla'}, {}, funk.add(function (error, ret) {
+          assert.equal(ret, 1);
         }));
 
-        User.pushEmbeddedDocument(query, 'comments', {body: 'trolling bla'}, {}, funk.add(function (error, doc) {
-          assert.equal(doc.$push['comments.body'], 'trolling bla');
+        User.pushEmbeddedDocument(query, 'comments', {body: 'trolling bla'}, {}, funk.add(function (error, ret) {
+          assert.equal(ret, 1);
         }));
 
         funk.parallel(done);
@@ -210,7 +210,7 @@ db.open(function (error) {
         var User = Model(db, 'users');
 
         User.validate = function (document, update, callback) {
-          var validator = require('./../../lib/validator')(document);
+          var validator = require('./../../lib/validator')(document, update);
 
           if (update.name !== 'zemba') {
             validator.addError('name', 'We only love Zemba here');

@@ -17,7 +17,7 @@ module.exports = function (APP) {
     callback(null, validator);
   };
 
-  COMMENT.afterCreate = function (documents, callback) {
+  COMMENT.afterInsert = function (documents, callback) {
     var funk = require('funk')();
     documents.forEach(function (document) {
       Post().pushEmbeddedDocument({_id: document.post._id}, 'comments', document, funk.nothing());

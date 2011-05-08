@@ -26,7 +26,7 @@ module.exports = function (APP) {
   };
 
   POST.afterUpdate = function (query, update, callback) {
-    Comment().updateEmbeddedDocument({'_id': query._id}, 'post', update, {}, callback);
+    Comment().updateEmbeddedDocument({_id: query._id}, 'post', update, {}, callback);
   };
 
   return POST;

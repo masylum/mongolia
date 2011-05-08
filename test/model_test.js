@@ -140,10 +140,10 @@ testosterone
     User.validateAndInsert(document, callback);
   })
 
-  .add('`beforeCreate` default hook sets the created_at date', function () {
+  .add('`beforeInsert` default hook sets the created_at date', function () {
     var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
-    User.beforeCreate(documents, function (_error, _documents) {
+    User.beforeInsert(documents, function (_error, _documents) {
       _documents.forEach(function (document) {
         assert.ok(document.created_at);
         assert.equal(document.created_at.constructor, (new Date()).constructor);
@@ -183,7 +183,7 @@ testosterone
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
     var document = {name: 'zemba', email: 'zemba@foobar.com'},
-        update = {name: 'John'},
+        update = {'$set': {name: 'John'}},
         validator = _mock_validator(false),
         options = {},
         callback;
@@ -198,7 +198,7 @@ testosterone
 
     gently.expect(User, 'mongo', function (_action, _document, _update, _options, _callback) {
       assert.equal(_action, 'update');
-      assert.equal(_update, update);
+      assert.deepEqual(_update, update);
       _callback(null, _document);
     });
 
@@ -251,51 +251,59 @@ testosterone
   })
 
   .add('`updateEmbeddedDocument` updates embedded objects', function () {
-    var embeddedDocument = {'author.name': 'john'},
+    var embeddedDocument = {name: 'john'},
         options = {},
+        collection = {foo: 'bar'},
         callback = function () {};
 
     gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
       assert.equal(_name, 'author');
-      assert.deepEqual(_doc, {name: 'paco'});
-      assert.equal(_scope, 'author');
-      assert.equal(_dot_notation, true);
+      assert.deepEqual(_doc, embeddedDocument);
+      assert.ifError(_scope);
+      assert.ifError(_dot_notation);
       return embeddedDocument;
     });
 
-    gently.expect(User, 'mongo', function (_action, _query, _update, _options, _callback) {
-      assert.equal(_action, 'update');
+    gently.expect(User, 'getCollection', function (_callback) {
+      _callback(null, collection);
+    });
+
+    gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
       assert.deepEqual(_query, {'author._id': 1});
-      assert.deepEqual(_update, {'$set': embeddedDocument});
+      assert.deepEqual(_update, {'$set': {author: embeddedDocument}});
       assert.equal(_options, options);
       assert.equal(_callback, callback);
     });
 
-    User.updateEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, options, callback);
+    User.updateEmbeddedDocument({_id: 1}, 'author', embeddedDocument, options, callback);
   })
 
   .add('`pushEmbeddedDocument` pushes embedded objects', function () {
-    var embeddedDocument = {'author.name': 'john'},
+    var embeddedDocument = {name: 'john'},
         options = {},
+        collection = {foo: 'bar'},
         callback = function () {};
 
     gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
       assert.equal(_name, 'author');
-      assert.deepEqual(_doc, {name: 'paco'});
-      assert.equal(_scope, 'author');
-      assert.equal(_dot_notation, true);
+      assert.deepEqual(_doc, embeddedDocument);
+      assert.ifError(_scope);
+      assert.ifError(_dot_notation);
       return embeddedDocument;
     });
 
-    gently.expect(User, 'mongo', function (_action, _query, _update, _options, _callback) {
-      assert.equal(_action, 'update');
+    gently.expect(User, 'getCollection', function (_callback) {
+      _callback(null, collection);
+    });
+
+    gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
       assert.deepEqual(_query, {_id: 1});
-      assert.deepEqual(_update, {'$push': embeddedDocument});
+      assert.deepEqual(_update, {'$push': {author: embeddedDocument}});
       assert.equal(_options, options);
       assert.equal(_callback, callback);
     });
 
-    User.pushEmbeddedDocument({_id: 1}, 'author', {name: 'paco'}, options, callback);
+    User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument, options, callback);
   })
 
   .run();
