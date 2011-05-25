@@ -1,7 +1,7 @@
 {
   "name": "mongolia",
   "description": "Layer on top of the mongodb driver to implement data logic.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Pau Ramon <masylum@gmail.com>",
   "contributors": [
       { "name": "Pau Ramon", "email": "masylum@gmail.com" },
@@ -9,10 +9,10 @@
   ],
   "keywords": ["mongo", "mongodb", "models", "database", "db"],
   "main": "./index",
-  "dependencies": { "mongodb": ">=0.9.3", "funk": ">=1.0.1"},
+  "dependencies": { "mongodb": ">=0.9.3", "funk": "1.0.1"},
   "devDependencies": {
-    "testosterone": ">= 1.2.0",
-    "gently": ">= 0.9.0"
+    "testosterone": "1.2.0",
+    "gently": "0.9.1"
   },
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.4.0" }

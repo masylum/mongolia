@@ -20,7 +20,7 @@ testosterone
     assert.deepEqual(val2.errors, {});
     assert.deepEqual(val2.document, doc);
     assert.deepEqual(val2.update, update);
-    assert.deepEqual(val2.updated_document, {foo: 'bar', hey: 'joe'});
+    assert.deepEqual(val2.updated_document, {foo: 'bar'});
   })
 
   .add('`addError` adds a validation error', function () {
