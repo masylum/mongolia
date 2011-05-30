@@ -22,7 +22,7 @@ testosterone
         assert.equal(cb, _callback);
       });
 
-      CollectionProxy.proxy(Model, method, Collection, args, cb);
+      CollectionProxy.proxy(Model, method, undefined, Collection, args, cb);
     });
 
     ['find', 'foo'].forEach(function (method) {
@@ -31,8 +31,31 @@ testosterone
         assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(Model, method, Collection, args, cb);
+      CollectionProxy.proxy(Model, method, undefined, Collection, args, cb);
     });
+  })
+
+  .add('`proxy` modifies the arguments according to namespaces', function () {
+    var cb = function () {},
+        args = [{foo: 'bar'}, cb];
+
+    Model.namespaces = {
+      foo: ['zemba', 'fleiba']
+    };
+
+    gently.expect(CollectionProxy.namespacer, 'filter', function (_namespaces, _namespace, _fn, _args) {
+      assert.deepEqual(_namespaces, Model.namespaces);
+      assert.deepEqual(_namespace, 'foo');
+      assert.equal(_fn, 'find');
+      assert.deepEqual(_args, args);
+    });
+
+    gently.expect(Collection, 'find', function (_arg, _callback) {
+      assert.equal(_arg, args[0]);
+      assert.deepEqual(_callback, args[1]);
+    });
+
+    CollectionProxy.proxy(Model, 'find', 'foo', Collection, args, cb);
   })
 
   .add('`proxy` can be called with no callback', function () {
@@ -46,7 +69,7 @@ testosterone
         assert.equal(typeof _callback, 'function');
       });
 
-      CollectionProxy.proxy(Model, method, Collection, args);
+      CollectionProxy.proxy(Model, method, undefined, Collection, args);
     });
 
     ['find', 'foo'].forEach(function (method) {
@@ -55,7 +78,7 @@ testosterone
         assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(Model, method, Collection, args);
+      CollectionProxy.proxy(Model, method, undefined, Collection, args);
     });
   })
 

@@ -45,16 +45,21 @@ db.open(function (error) {
           callback(null, documents);
         };
 
+        User.namespaces = {
+          'public': ['name', 'country']
+        };
+
         Country.mongo('insert', {name: 'Andorra'}, function (error, docs) {
           var doc = docs[0];
           assert.equal(doc.name, 'Andorra');
           assert.ok(doc.created_at);
 
-          User.mongo('insert', {name: 'zemba', country: doc}, done(function (error, docs) {
+          User.mongo('insert:public', {name: 'zemba', country: doc, password: 'malicious'}, done(function (error, docs) {
             var doc = docs[0];
             assert.equal(doc.name, 'zemba');
             assert.equal(doc.has_country, true);
             assert.deepEqual(doc.country.name, 'Andorra');
+            assert.equal(doc.password, null); // namespaced!
             assert.deepEqual(doc.comments, []);
           }));
         });

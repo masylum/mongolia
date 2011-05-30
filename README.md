@@ -108,6 +108,44 @@ COMMENT.atferInsert = function (documents, callback) {
 };
 ```
 
+## Data namespacing
+
+Secure your data access defining visibility namespaces.
+
+You can namespace a call to the database by appending `:namespace` on
+your proxied method.
+
+If called withot a namespace, the method will work ignoring the `namespace` directives.
+
+You can `extend` other namespaces and `add` or `remove` some data visibility.
+
+``` javascript
+var USER = require('mongolia').model(db, 'users');
+
+USER.namespaces = {
+  public: ['email', 'name', '_id'],
+  private: {
+    extend: 'public',
+    add: ['password'],
+  },
+  accounting: {
+    extend: 'private',
+    add: ['credit_card_number'] // don't do this at home
+  }
+};
+
+USER.mongo('insert:public', {email: 'foo@bar.com', password: 'fleiba', credit_card_number: 123, is_active: true});
+// stored => {email: 'foo@bar.com'}
+
+USER.mongo('update:private', {email: 'foo@bar.com'}, {email: 'foo@bar.com', credit_card_number: 999, password: 'zemba'});
+// updates => {email: 'foo@bar.com', password: 'zemba'}
+
+USER.mongo('findArray:accounting', {email: 'foo@bar.com'});
+// gets => {email: 'foo@bar.com', password: 'fleiba', credit_card_number: 123}
+```
+
+Use this feature wisely to filter users data coming from forms.
+
 ## Embedded documents
 
 Mongolia helps you to _denormalize_ your mongo database.

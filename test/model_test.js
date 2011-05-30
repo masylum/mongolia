@@ -52,14 +52,35 @@ testosterone
       _callback(null, collection);
     });
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _collection, _args, _callback) {
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
       assert.equal(_fn, 'findArray');
+      assert.deepEqual(_namespace, undefined);
       assert.deepEqual(_collection, collection);
       assert.deepEqual(_args[0], query);
       assert.equal(_callback, callback);
     });
 
     User.mongo('findArray', query, callback);
+  })
+
+  .add('`mongo` proxies namespaced collection calls', function () {
+    var callback = function (error, doc) {},
+        query = {name: 'zemba'},
+        collection = {collectionName: 'users'};
+
+    gently.expect(_db, 'collection', function (_collection_name, _callback) {
+      _callback(null, collection);
+    });
+
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
+      assert.equal(_fn, 'findArray');
+      assert.deepEqual(_namespace, 'public');
+      assert.deepEqual(_collection, collection);
+      assert.deepEqual(_args[0], query);
+      assert.equal(_callback, callback);
+    });
+
+    User.mongo('findArray:public', query, callback);
   })
 
   .add('`mongo` can be called without a callback', function () {
@@ -70,8 +91,9 @@ testosterone
       _callback(null, collection);
     });
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _collection, _args, _callback) {
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
       assert.equal(_fn, 'findArray');
+      assert.deepEqual(_namespace, undefined);
       assert.deepEqual(_collection, collection);
       assert.deepEqual(_args[0], query);
       assert.equal(typeof _callback, 'function');

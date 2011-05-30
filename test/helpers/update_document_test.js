@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
+var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/update_document.js'}),
     assert = testosterone.assert,
     UpdateDocument = require('./../../lib/helpers/update_document');
 
