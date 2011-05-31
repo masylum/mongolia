@@ -108,6 +108,27 @@ COMMENT.atferInsert = function (documents, callback) {
 };
 ```
 
+## Data maps and type casting
+
+Mongolia `maps` allows you to cast the data before is stored to the database.
+Mongolia will apply the specified function for each attribute on the `maps` object.
+
+``` javascript
+var USER = require('mongolia').model(db, 'users');
+
+USER.maps = {
+  email: String,
+  name: function (val) {val.toUpperCase()},
+  _id: ObjectID,
+  password: String,
+  salt: String,
+  is_deleted: Boolean
+};
+
+USER.mongo('insert', {email: 'foo@bar.com', password: 123, name: 'john', is_deleted: 'true'});
+// stored => {password: '123', name: 'JOHN', is_deleted: true}
+```
+
 ## Data namespacing
 
 Secure your data access defining visibility namespaces.

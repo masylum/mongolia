@@ -35,7 +35,7 @@ testosterone
     });
   })
 
-  .add('`proxy` modifies the arguments according to namespaces', function () {
+  .add('`proxy` modifies the arguments according to `namespaces`', function () {
     var cb = function () {},
         args = [{foo: 'bar'}, cb];
 
@@ -56,6 +56,28 @@ testosterone
     });
 
     CollectionProxy.proxy(Model, 'find', 'foo', Collection, args, cb);
+  })
+
+  .add('`proxy` maps the arguments according to `maps`', function () {
+    var cb = function () {},
+        args = [{foo: 'bar'}, cb];
+
+    Model.maps = {
+      foo: Boolean
+    };
+
+    gently.expect(CollectionProxy.mapper, 'filter', function (_maps, _fn, _args) {
+      assert.deepEqual(_maps, Model.maps);
+      assert.equal(_fn, 'find');
+      assert.deepEqual(_args, args);
+    });
+
+    gently.expect(Collection, 'find', function (_arg, _callback) {
+      assert.equal(_arg, args[0]);
+      assert.deepEqual(_callback, args[1]);
+    });
+
+    CollectionProxy.proxy(Model, 'find', undefined, Collection, args, cb);
   })
 
   .add('`proxy` can be called with no callback', function () {
