@@ -9,30 +9,38 @@ testosterone
   .add('`filterUpdate` should filter documents before being inserted or updated', function () {
     var test = Namespacer.filterUpdate
       , arg
-      , update = {zemba: 'FOO', fleiba: 123, foo: true}
-      , maps = {
-          zemba: function (val) {
-            return val.toUpperCase();
-          }
-        , fleiba: Number
-        , foo: Boolean
-        };
+      , toUpper = function (val) {
+          return val.toUpperCase();
+        }
+      , update = {zemba: 'FOO', nested: {id: 123, name: '300'}, foo: true}
+      , maps = { zemba: toUpper
+               , nested: { id: Number
+                         , name: String
+                         }
+               , foo: Boolean
+               };
 
     // document
-    arg = {zemba: 'foo', fleiba: '123', foo: 'true'};
+    arg = {zemba: 'foo', nested: {id: '123', name: 300}, foo: 'true'};
     test(maps, arg);
     assert.deepEqual(arg, update);
+    assert.equal(typeof arg.nested.id, typeof update.nested.id);
+    assert.equal(typeof arg.nested.name, typeof update.nested.name);
 
     // array
-    arg = [{zemba: 'fleiba'}, {zemba: 'foo', fleiba: '123', foo: 'true'}];
+    arg = [{zemba: 'fleiba'}, {zemba: 'foo', nested: {id: '123', name: 300}, foo: 'true'}];
     test(maps, arg);
     assert.deepEqual(arg[0], {zemba: 'FLEIBA'});
     assert.deepEqual(arg[1], update);
+    assert.equal(typeof arg[1].nested.id, typeof update.nested.id);
+    assert.equal(typeof arg[1].nested.name, typeof update.nested.name);
 
     // with sepcial ops
-    arg = {'$set': {zemba: 'foo', fleiba: '123', foo: 'true'}};
+    arg = {'$set': {zemba: 'foo', nested: {id: '123', name: 300}, foo: 'true'}};
     test(maps, arg);
     assert.deepEqual(arg, {'$set': update});
+    assert.equal(typeof arg.$set.nested.id, typeof update.nested.id);
+    assert.equal(typeof arg.$set.nested.name, typeof update.nested.name);
   })
 
   .run();

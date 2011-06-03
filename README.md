@@ -64,19 +64,6 @@ Mongolia provides some useful commands that are not available using the driver.
   * `mapReduceArray`: mapReduce that returns an array with the results.
   * `mapReduceCursor`: mapReduce that returns a cursor.
 
-You can add your own custom methods by adding functions to the `collection_proxy` attribute in your models.
-
-``` javascript
-// Implement a custom query => Post.mongo('findByAuthor', author_id, callback)
-Post.collection_proxy.findByAuthor = function (model, collection, args, callback) {
-  args[0] = {'author._id': args[0]};
-  args[args.length - 1] = function (error, cursor) {
-    cursor.sort(['created_at', 1]).toArray(callback);
-  };
-  collection[fn].apply(collection, args);
-}
-```
-
 ## Hooks
 
 Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
@@ -108,7 +95,7 @@ COMMENT.atferInsert = function (documents, callback) {
 };
 ```
 
-## Data maps and type casting
+## Mappings and type casting
 
 Mongolia `maps` allows you to cast the data before is stored to the database.
 Mongolia will apply the specified function for each attribute on the `maps` object.
@@ -117,9 +104,11 @@ Mongolia will apply the specified function for each attribute on the `maps` obje
 var USER = require('mongolia').model(db, 'users');
 
 USER.maps = {
-  email: String,
-  name: function (val) {val.toUpperCase()},
   _id: ObjectID,
+  account: {
+    email: String,
+    name: function (val) {val.toUpperCase()}
+  },
   password: String,
   salt: String,
   is_deleted: Boolean
@@ -129,7 +118,7 @@ USER.mongo('insert', {email: 'foo@bar.com', password: 123, name: 'john', is_dele
 // stored => {password: '123', name: 'JOHN', is_deleted: true}
 ```
 
-## Data namespacing
+## Namespacing
 
 Secure your data access defining visibility namespaces.
 
@@ -144,7 +133,7 @@ You can `extend` other namespaces and `add` or `remove` some data visibility.
 var USER = require('mongolia').model(db, 'users');
 
 USER.namespaces = {
-  public: ['email', 'name', '_id'],
+  public: ['account.email', 'account.name', '_id'],
   private: {
     extend: 'public',
     add: ['password'],
@@ -155,14 +144,17 @@ USER.namespaces = {
   }
 };
 
-USER.mongo('insert:public', {email: 'foo@bar.com', password: 'fleiba', credit_card_number: 123, is_active: true});
-// stored => {email: 'foo@bar.com'}
+USER.mongo('insert:public', {account: {email: 'foo@bar.com'}, password: 'fleiba', credit_card_number: 123, is_active: true});
+// insert => {account: {email: 'foo@bar.com'}}
 
-USER.mongo('update:private', {email: 'foo@bar.com'}, {email: 'foo@bar.com', credit_card_number: 999, password: 'zemba'});
-// updates => {email: 'foo@bar.com', password: 'zemba'}
+USER.mongo('update:private', {'$set': {'account.email': 'foo@bar.com', 'account.phone': '123123', credit_card_number: 999, password: 'zemba'});
+// updates => {'$set': {'account.email': 'foo@bar.com', password: 'zemba'}}
 
-USER.mongo('findArray:accounting', {email: 'foo@bar.com'});
-// gets => {email: 'foo@bar.com', password: 'fleiba', credit_card_number: 123}
+USER.mongo('findArray:public', {account: {email: 'foo@bar.com'}});
+// find => {account: {email: 'foo@bar.com', name: 'paco'}}
+
+USER.mongo('findArray:accounting', {account: {email: 'foo@bar.com'}});
+// find => {account: {email: 'foo@bar.com', name: 'paco'}, password: 'fleiba', credit_card_number: 123}
 ```
 
 Use this feature wisely to filter users data coming from forms.
