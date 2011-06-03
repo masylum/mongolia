@@ -66,7 +66,7 @@ testosterone
       foo: Boolean
     };
 
-    gently.expect(CollectionProxy.mapper, 'filter', function (_maps, _fn, _args) {
+    gently.expect(CollectionProxy.mapper, 'map', function (_maps, _fn, _args) {
       assert.deepEqual(_maps, Model.maps);
       assert.equal(_fn, 'find');
       assert.deepEqual(_args, args);

@@ -49,10 +49,18 @@ db.open(function (error) {
           'public': ['name', 'country']
         };
 
-        Country.mongo('insert', {name: 'Andorra'}, function (error, docs) {
+        Country.maps = {
+          name: function (val) {
+                  return val.charAt(0).toUpperCase() + val.slice(1);
+                }
+        , iso: {id: Number}
+        };
+
+        Country.mongo('insert', {name: 'andorra', iso: {id: '123'}}, function (error, docs) {
           var doc = docs[0];
           assert.equal(doc.name, 'Andorra');
           assert.ok(doc.created_at);
+          assert.ok(doc.iso.id, 123);
 
           User.mongo('insert:public', {name: 'zemba', country: doc, password: 'malicious'}, done(function (error, docs) {
             var doc = docs[0];

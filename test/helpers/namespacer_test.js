@@ -68,38 +68,43 @@ testosterone
   .add('`filterUpdate` should filter documents before being inserted or updated', function () {
     var test = Namespacer.filterUpdate
       , arg
-      , insert = {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {parker: 'saxophone'}}
-      , update = {reinhardt: 'guitar', gillespie: 'trumpet', 'charlie.parker': 'saxophone'}
-      , visibility = ['reinhardt', 'gillespie', 'charlie.parker'];
+      , insert = {django: {reinhardt: 'guitar', framework: null}, charlie: {parker: 'saxophone'}}
+      , update = {django: {reinhardt: 'guitar', framework: null}, 'charlie.parker': 'saxophone'}
+      , visibility = ['django', 'charlie.parker'];
 
     // insert/update
-    arg = {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {christian: 'guitar', parker: 'saxophone'}};
+    arg = {django: {reinhardt: 'guitar', framework: null}, charlie: {christian: 'guitar', parker: 'saxophone'}};
     test(visibility, arg);
     assert.deepEqual(arg, insert);
 
     // insert/update
-    arg = { reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}};
+    arg = { django: {reinhardt: 'guitar', framework: null}, will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}};
     test(visibility, arg);
     assert.deepEqual(arg, insert);
 
     // insert/update
     arg = [
-      {reinhardt: 'guitar', will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}}
-    , {reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_inserted'}
+      {django: {reinhardt: 'guitar', framework: null}, will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}}
+    , {django: {reinhardt: 'guitar', framework: null}, will_not: 'be_inserted'}
     ];
     test(visibility, arg);
-    assert.deepEqual(arg[0], {reinhardt: 'guitar', charlie: {parker: 'saxophone'}});
-    assert.deepEqual(arg[1], {reinhardt: 'guitar', gillespie: 'trumpet'});
+    assert.deepEqual(arg[0], {django: {reinhardt: 'guitar', framework: null}, charlie: {parker: 'saxophone'}});
+    assert.deepEqual(arg[1], {django: {reinhardt: 'guitar', framework: null}});
 
     // update with sepcial ops
-    arg = {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', 'charlie.christian': 'guitar', 'charlie.parker': 'saxophone'}};
+    arg = {'$set': {django: {reinhardt: 'guitar', framework: null}, 'charlie.christian': 'guitar', 'charlie.parker': 'saxophone'}};
     test(visibility, arg);
     assert.deepEqual(arg, {'$set': update});
 
-    // update with sepcial ops
-    arg = {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_update', charlie: { christian: 'guitar', parker: 'saxophone'}}};
+    // update with sepcial ops dot notation
+    arg = {'$set': {'django.reinhardt': 'piano'}};
     test(visibility, arg);
-    assert.deepEqual(arg, {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {parker: 'saxophone'}}});
+    assert.deepEqual(arg, {'$set': {'django.reinhardt': 'piano'}});
+
+    // update with sepcial ops
+    arg = {'$set': {django: {reinhardt: 'guitar', framework: null}, will_not: 'be_update', charlie: { christian: 'guitar', parker: 'saxophone'}}};
+    test(visibility, arg);
+    assert.deepEqual(arg, {'$set': {django: {reinhardt: 'guitar', framework: null}, charlie: {parker: 'saxophone'}}});
   })
 
   .run();
