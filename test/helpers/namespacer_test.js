@@ -1,4 +1,4 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/namespacer_test.js'}),
+var testosterone = require('testosterone')({sync: true, title: 'mongolia/helpers/namespacer_test.js'}),
     assert = testosterone.assert,
     Namespacer = require('./../../lib/helpers/namespacer');
 
