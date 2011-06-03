@@ -8,21 +8,21 @@ testosterone
 
   .add('`resolveNamespace` implements the whole namespace API', function () {
     var test = Namespacer.resolveNamespace
-      , namespaces = { jazz: ['davis', 'coltrane', 'ellington', 'fitzgerald']
+      , namespaces = { jazz: ['mile.davis', 'coltrane', 'ellington', 'fitzgerald']
                      , modern: { extend: 'jazz'
                                , add: ['cohen', 'corea']
                                , remove: ['ellington', 'fitzgerald'] }};
 
     assert.deepEqual(test(namespaces, 'jazz'), namespaces.jazz);
-    assert.deepEqual(test(namespaces, 'modern'), ['davis', 'coltrane', 'cohen', 'corea']);
+    assert.deepEqual(test(namespaces, 'modern'), ['mile.davis', 'coltrane', 'cohen', 'corea']);
   })
 
   .add('`addFieldFind` adds `fields` to find methods if using a namespace', function () {
     var test = Namespacer.addFieldFind
       , args
       , cb = function () {}
-      , fields = {zemba: 1, fleiba: 1}
-      , visibility = ['zemba', 'fleiba'];
+      , fields = {zemba: 1, fleiba: 1, 'nested.attribute': 1}
+      , visibility = ['nested.attribute', 'zemba', 'fleiba'];
 
     args = [{_id: 1}, cb];
     test(visibility, args);
@@ -45,8 +45,8 @@ testosterone
     var test = Namespacer.addFieldFindAndModify
       , args
       , cb = function () {}
-      , fields = {fields: {zemba: 1, fleiba: 1}}
-      , visibility = ['zemba', 'fleiba'];
+      , fields = {fields: {zemba: 1, fleiba: 1, 'nested.attribute': 1}}
+      , visibility = ['nested.attribute', 'zemba', 'fleiba'];
 
     args = [{_id: 1}, cb];
     test(visibility, args);
@@ -68,31 +68,38 @@ testosterone
   .add('`filterUpdate` should filter documents before being inserted or updated', function () {
     var test = Namespacer.filterUpdate
       , arg
-      , update = {zemba: 'foo', fleiba: 'bar'}
-      , visibility = ['zemba', 'fleiba', 'coltrane'];
+      , insert = {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {parker: 'saxophone'}}
+      , update = {reinhardt: 'guitar', gillespie: 'trumpet', 'charlie.parker': 'saxophone'}
+      , visibility = ['reinhardt', 'gillespie', 'charlie.parker'];
 
-    // insert
-    arg = {zemba: 'foo', fleiba: 'bar'};
+    // insert/update
+    arg = {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {christian: 'guitar', parker: 'saxophone'}};
     test(visibility, arg);
-    assert.deepEqual(arg, update);
+    assert.deepEqual(arg, insert);
 
-    arg = {zemba: 'foo', fleiba: 'bar', will_not: 'be_inserted'};
+    // insert/update
+    arg = { reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}};
     test(visibility, arg);
-    assert.deepEqual(arg, update);
+    assert.deepEqual(arg, insert);
 
-    arg = [{zemba: 'foo', will_not: 'be_inserted'}, {zemba: 'foo', fleiba: 'bar', will_not: 'be_inserted'}];
+    // insert/update
+    arg = [
+      {reinhardt: 'guitar', will_not: 'be_inserted', charlie: { christian: 'guitar', parker: 'saxophone'}}
+    , {reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_inserted'}
+    ];
     test(visibility, arg);
-    assert.deepEqual(arg[0], {zemba: 'foo'});
-    assert.deepEqual(arg[1], update);
+    assert.deepEqual(arg[0], {reinhardt: 'guitar', charlie: {parker: 'saxophone'}});
+    assert.deepEqual(arg[1], {reinhardt: 'guitar', gillespie: 'trumpet'});
 
-    // with sepcial ops
-    arg = {'$set': {zemba: 'foo', fleiba: 'bar'}};
+    // update with sepcial ops
+    arg = {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', 'charlie.christian': 'guitar', 'charlie.parker': 'saxophone'}};
     test(visibility, arg);
     assert.deepEqual(arg, {'$set': update});
 
-    arg = {'$set': {zemba: 'foo', fleiba: 'bar', will_not: 'be_update'}};
+    // update with sepcial ops
+    arg = {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', will_not: 'be_update', charlie: { christian: 'guitar', parker: 'saxophone'}}};
     test(visibility, arg);
-    assert.deepEqual(arg, {'$set': update});
+    assert.deepEqual(arg, {'$set': {reinhardt: 'guitar', gillespie: 'trumpet', charlie: {parker: 'saxophone'}}});
   })
 
   .run();
