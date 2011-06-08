@@ -195,7 +195,7 @@ console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
 Updates an embed object.
 
 ``` javascript
-Model.updateEmbeddedDocument(query, document_name, document, options, callback);
+Model.updateEmbeddedDocument(query, document_name, document[, options, callback]);
 ```
 
 Example:
@@ -206,7 +206,7 @@ module.exports = function (db) {
 
   // After updating a user, we want to update denormalized Post.author foreach post
   USER.afterUpdate = function (query, update, callback) {
-    Post(db).updateEmbeddedDocument({_id: query._id}, 'author', update, {}, callback);
+    Post(db).updateEmbeddedDocument({_id: query._id}, 'author', update, {upsert: false}, callback);
   };
 
   return USER;
@@ -218,7 +218,7 @@ module.exports = function (db) {
 Pushes an embedded document.
 
 ``` javascript
-Model.pushEmbeddedDocument(query, data, name, options, callback);
+Model.pushEmbeddedDocument(query, data, name[, options, callback]);
 ```
 
 Example:
@@ -241,8 +241,8 @@ module.exports = function (db) {
 Mongolia provides two methods that allow you to create and update using the `validator`.
 
 ``` javascript
-Model.validateAndInsert(document, callback(error, validator));
-Model.validateAndUpdate(document, update, options, callback(error, validator));
+Model.validateAndInsert(document[, options, callback(error, validator)]);
+Model.validateAndUpdate(document, update[, options, callback(error, validator)]);
 ```
 
 In order to validate an insertion/update, the model have to implement a `validate` function on your model.
