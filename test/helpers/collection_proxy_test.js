@@ -259,10 +259,10 @@ testosterone
         args = ['fleiba', cb],
         cursor = {};
 
-    gently.expect(CollectionProxy, 'mapReduceCursor', function (_collection, _args, _fn, _callback) {
+    gently.expect(CollectionProxy, 'mapReduceCursor', function (_model, _collection, _args, _callback) {
+      assert.equal(_model, Model);
       assert.equal(_collection, Collection);
       assert.equal(_args, args);
-      assert.equal(_fn, 'mapReduce');
 
       gently.expect(cursor, 'toArray', function (_callback) {
         assert.equal(_callback, cb);
