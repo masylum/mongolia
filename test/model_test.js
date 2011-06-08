@@ -301,9 +301,7 @@ testosterone
 
   .add('`pushEmbeddedDocument` pushes embedded objects', function () {
     var embeddedDocument = {name: 'john'},
-        options = {},
-        collection = {foo: 'bar'},
-        callback = function () {};
+        collection = {foo: 'bar'};
 
     gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
       assert.equal(_name, 'author');
@@ -320,11 +318,10 @@ testosterone
     gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
       assert.deepEqual(_query, {_id: 1});
       assert.deepEqual(_update, {'$push': {author: embeddedDocument}});
-      assert.equal(_options, options);
-      assert.equal(_callback, callback);
+      assert.deepEqual(_options, {upsert: true, multi: true});
     });
 
-    User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument, options, callback);
+    User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument);
   })
 
   .run();
