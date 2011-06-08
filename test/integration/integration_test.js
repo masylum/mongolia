@@ -50,7 +50,7 @@ db.open(function (error) {
         };
 
         Country.maps = {
-          name: function (val) {
+          name: function capitalize(val) {
                   return val.charAt(0).toUpperCase() + val.slice(1);
                 }
         , iso: {id: Number}
@@ -62,14 +62,15 @@ db.open(function (error) {
           assert.ok(doc.created_at);
           assert.ok(doc.iso.id, 123);
 
-          User.mongo('insert:public', {name: 'zemba', country: doc, password: 'malicious'}, done(function (error, docs) {
+          User.mongo('insert:public', {name: 'zemba', country: doc, password: 'malicious'}, function (error, docs) {
             var doc = docs[0];
             assert.equal(doc.name, 'zemba');
             assert.equal(doc.has_country, true);
             assert.deepEqual(doc.country.name, 'Andorra');
             assert.equal(doc.password, null); // namespaced!
             assert.deepEqual(doc.comments, []);
-          }));
+            done();
+          });
         });
       })
 
@@ -83,6 +84,7 @@ db.open(function (error) {
 
             User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
               assert.equal(doc.country.name, 'France');
+              assert.equal(doc.country.iso.id, '123');
             }));
           });
         });

@@ -267,23 +267,19 @@ testosterone
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo', body: 'Lorem ipsum'});
     assert.deepEqual(
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
-      {post: {comment: {_id: 1, title: 'foo', body: 'Lorem ipsum'}}}
+      {post: {comment: comment}}
     );
   })
 
   .add('`updateEmbeddedDocument` updates embedded objects', function () {
-    var embeddedDocument = {name: 'john'},
+    var embeddedDocument = {name: 'john', surname: 'snow', bo: 'vale'},
         options = {},
         collection = {foo: 'bar'},
         callback = function () {};
 
-    gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
-      assert.equal(_name, 'author');
-      assert.deepEqual(_doc, embeddedDocument);
-      assert.ifError(_scope);
-      assert.ifError(_dot_notation);
-      return embeddedDocument;
-    });
+    User.skeletons = {
+      author: ['_id', 'name', 'surname']
+    };
 
     gently.expect(User, 'getCollection', function (_callback) {
       _callback(null, collection);
@@ -291,7 +287,7 @@ testosterone
 
     gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
       assert.deepEqual(_query, {'author._id': 1});
-      assert.deepEqual(_update, {'$set': {author: embeddedDocument}});
+      assert.deepEqual(_update, {'$set': {'author.name': 'john', 'author.surname': 'snow'}});
       assert.equal(_options, options);
       assert.equal(_callback, callback);
     });
