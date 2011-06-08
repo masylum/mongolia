@@ -235,7 +235,7 @@ db.open(function (error) {
         };
 
         User.validateAndInsert({name: 'zemba'}, done(function (error, validation) {
-          assert.equal(validation.updated_model.name, 'zemba');
+          assert.equal(validation.updated_document.name, 'zemba');
           assert.deepEqual(validation.errors, {});
 
           // Try to insert an invalid record
@@ -262,7 +262,7 @@ db.open(function (error) {
 
         User.validateAndUpdate({name: 'John Smith'}, {name: 'foobar'}, done(function (error, validation) {
           assert.deepEqual(validation.errors.name, ['We only love Zemba here']);
-          assert.deepEqual(validation.updated_model.name, 'John Smith');
+          assert.deepEqual(validation.updated_document.name, 'John Smith');
 
           User.validateAndUpdate({name: 'John Smith'}, {name: 'zemba'}, function (error, validation) {
             assert.deepEqual(validation.errors, {});

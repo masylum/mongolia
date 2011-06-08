@@ -285,7 +285,7 @@ Post(db).validateAndInsert(
     if (validator.hasErrors()) {
       console.log(validator.errors);
     } else {
-      console.log(validator.updated_model);
+      console.log(validator.updated_document);
     }
   }
 );
