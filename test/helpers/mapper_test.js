@@ -41,6 +41,12 @@ testosterone
     assert.deepEqual(arg, {'$set': update});
     assert.equal(typeof arg.$set.nested.id, typeof update.nested.id);
     assert.equal(typeof arg.$set.nested.name, typeof update.nested.name);
+
+    // dot notation
+    arg = {'$set': {'nested.id': '123', 'nested.name': 300, foo: 'true'}};
+    test(maps, arg);
+    assert.equal(typeof arg.$set['nested.id'], typeof update.nested.id);
+    assert.equal(typeof arg.$set['nested.name'], typeof update.nested.name);
   })
 
   .run();
