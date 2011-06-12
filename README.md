@@ -176,23 +176,23 @@ var POST = require('mongolia').model(db, 'posts');
 
 // only embed the comment's _id, and title
 POST.skeletons = {
-  comment: ['_id', 'title']
+  comment: ['_id', 'title', 'post.name']
 };
 
-var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum'}
+var comment = {'_id': 1, title: 'foo', body: 'Lorem ipsum', post: {_id: 1, name: 'bar'}}
 console.log(Post(db).getEmbeddedDocument('comment', comment));
-// outputs => {'_id': 1, title: 'foo'};
+// outputs => {'_id': 1, title: 'foo', post: {name: 'bar'}};
 
 console.log(Post(db).getEmbeddedDocument('comment', comment, 'post'));
-// outputs => {post: {'_id': 1, title: 'foo'}};
+// outputs => {post: {'_id': 1, title: 'foo', post: {name: 'bar'}}};
 
-console.log(Post(db).getEmbeddedDocument('comment', comment, 'post', true));
-// outputs => {'post._id': 1, 'post.title': 'foo'};
+console.log(Post(db).getEmbeddedDocument('comment', comment, 'posts', true));
+// outputs => {'posts._id': 1, 'posts.title': 'foo', 'posts.post.name': 'bar'};
 ```
 
 ### updateEmbeddedDocument
 
-Updates an embed object.
+Updates an embed object following the `skeletons` directive.
 
 ``` javascript
 Model.updateEmbeddedDocument(query, document_name, document[, options, callback]);
@@ -215,7 +215,7 @@ module.exports = function (db) {
 
 ### pushEmbeddedDocument
 
-Pushes an embedded document.
+Pushes an embedded document following the `skeletons` directive.
 
 ``` javascript
 Model.pushEmbeddedDocument(query, data, name[, options, callback]);

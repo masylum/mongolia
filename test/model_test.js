@@ -245,6 +245,20 @@ testosterone
     );
   })
 
+  .add('`getEmbeddedDocument` filters the document following recursive skeletons directives', function () {
+    var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
+
+    User.skeletons = {
+      post: ['_id', 'title', 'comment.body']
+    };
+
+    assert.deepEqual(User.getEmbeddedDocument('post', post), {_id: 1, title: 'foo', comment: {body: 'comment body!'}});
+    assert.deepEqual(
+      User.getEmbeddedDocument('post', post, 'post'),
+      {post: {_id: 1, title: 'foo', comment: {body: 'comment body!'}}}
+    );
+  })
+
   .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
@@ -252,10 +266,27 @@ testosterone
       comment: ['_id', 'title']
     };
 
-    assert.deepEqual(User.getEmbeddedDocument('comment', comment), {_id: 1, title: 'foo'}, true);
+    assert.deepEqual(User.getEmbeddedDocument('comment', comment), {_id: 1, title: 'foo'});
+    assert.deepEqual(
+      User.getEmbeddedDocument('comment', comment, 'post', true)
+    , {'post._id': 1, 'post.title': 'foo'}
+    );
     assert.deepEqual(
       User.getEmbeddedDocument('comment', comment, 'post.comment', true),
       {'post.comment._id': 1, 'post.comment.title': 'foo'}
+    );
+  })
+
+  .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings using rescursive stuff', function () {
+    var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
+
+    User.skeletons = {
+      post: ['_id', 'title', 'comment.body']
+    };
+
+    assert.deepEqual(
+      User.getEmbeddedDocument('post', post, 'user.post', true),
+      {'user.post._id': 1, 'user.post.title': 'foo', 'user.post.comment.body': 'comment body!'}
     );
   })
 
