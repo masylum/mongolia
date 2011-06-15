@@ -293,65 +293,97 @@ Post(db).validateAndInsert(
 
 # Validator
 
+Mongolia validator accepts a document and an update.
+
+If you are validating an insert, the document will be an empty object `{}` and the update
+the document you are inserting.
+
+Mongolia will resolve the update client side exposing a `updated_document`.
+
 ``` javascript
-isUpdating()
+var validator = require('mongolia').validator({foo: 1}, {'$inc': {foo: 1}});
+
+if (validator.updated_document.foo > 1) {
+  validator.addError('foo', 'foo must be ONE');
+}
+console.log(validator.hasError('foo')); // => true
 ```
+
+All the methods listed below accept `dot_notation`.
+
+## API
 
 Returns true if the validator is handling an updateInstance operation.
 
 ``` javascript
-isInserting()
+isUpdating()
 ```
 
 Returns true if the validator is handling an createInstance operation.
 
 ``` javascript
-attrChanged(attr)
+isInserting()
 ```
 
 Returns true if the attributed changed
 
 ``` javascript
-addError(field, value)
+attrChanged(attr)
 ```
 
 Adds an error to your validator. Accept dot notation to add nested errors.
 
 ``` javascript
-hasError(field)
+addError(field, value)
 ```
 
 Returns true if the attributed failed a validation. Accept dot notation to check nested errors.
 
 ``` javascript
-hasErrors()
+hasError(field)
 ```
 
 Returns true if any attributed failed a validation
 
 ``` javascript
-validateExistence(validations)
+hasErrors()
 ```
 
 It fills your validator with errors if any of the elements are empty
 
 ``` javascript
-validateRegex(validations)
+validateExistence({
+  attr: 'Error message'
+, attr: ...
+})
 ```
 
 It fills your validator with errors if any of the elements fail the regex
 
 ``` javascript
-validateConfirmation(validations)
+validateRegex({
+  attr: [/regex/, 'Error message']
+, attr: ...
+})
 ```
 
 It fills your validator with errors if any of the elements fail the confirmation (good for passwords)
 
 ``` javascript
-validateQuery(validations, callback)
+validateConfirmation({
+  attr: ['confirmation_attr', 'Error message']
+, attr: ...
+})
 ```
 
 It fills your validator with errors if any of the queries fail (good to avoid duplicated data)
+
+``` javascript
+validateQuery({
+  attr: [Model, query, false, 'Error message']
+, attr: ...
+}, callback)
+```
 
 Example using some of the validator features:
 
@@ -360,7 +392,8 @@ var User = function (db) {
   var USER = require('mongolia').model(db, 'users');
 
   USER.validate = function (document, update, callback) {
-    var validator = require('mongolia').validator(document, update);
+    var validator = require('mongolia').validator(document, update)
+      , updated_document = validator.updated_document;
 
     validator.validateRegex({
       name: [validator.regex.username, 'Incorrect name'],
@@ -375,20 +408,20 @@ var User = function (db) {
       });
     }
 
-    if (!update.tags || update.tags.length <= 0) {
+    if (!updated_document.tags || updated_document.tags.length <= 0) {
       validator.addError('tags', 'Select at least one tag');
     }
 
-    if (validator.isUpdating()) {
-      validator.validateQuery({
-        name: [this, {name: update.name}, false, 'There is already a user with this name'],
-        email: [this, {email: update.email}, false, 'There is already a user with this email']
-      }, function () {
-        callback(null, validator);
-      });
-    } else {
+    validator.validateQuery({
+      email: [
+        this
+      , {_id: {'$not': document._id}, email: updated_document.email}
+      , false
+      , 'There is already a user with this email'
+      ]
+    }, function () {
       callback(null, validator);
-    }
+    });
   }
 
   return USER;

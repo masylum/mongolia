@@ -28,6 +28,14 @@ testosterone
     assert.deepEqual(ret, {foo: {bar: 4}});
   })
 
+  .add('`$inc` sets doc value using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$inc': {'foo.bar': 3}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {foo: {bar: 3}});
+  })
+
   .add('`$set` sets doc value', function () {
     var update = {'$set': {foo: 'zemba'}}
       , doc = {foo: 'bar', hey: 'joe'}
@@ -39,6 +47,14 @@ testosterone
   .add('`$set` sets doc value using `dot_notation`', function () {
     var update = {'$set': {'foo.bar': 'zemba'}}
       , doc = {foo: {bar: 'joe'}}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {foo: {bar: 'zemba'}});
+  })
+
+  .add('`$set` sets doc value using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$set': {'foo.bar': 'zemba'}}
+      , doc = {}
       , ret = UpdateDocument({document: doc, update: update});
 
     assert.deepEqual(ret, {foo: {bar: 'zemba'}});
@@ -60,6 +76,14 @@ testosterone
     assert.deepEqual(ret, {foo: {bar: {}}});
   })
 
+  .add('`$unset` unsets doc value using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$unset': {'foo.bar.hey': 1}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {});
+  })
+
   .add('`$push` pushes doc value', function () {
     var update = {'$push': {foo: 'fleiba'}}
       , doc = {foo: ['bar'], hey: 'joe'}
@@ -76,6 +100,14 @@ testosterone
     assert.deepEqual(ret, {foo: {bar: ['bar', 'fleiba']}});
   })
 
+  .add('`$push` pushes doc value using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$push': {'foo.bar': 'fleiba'}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {foo: {bar: ['fleiba']}});
+  })
+
   .add('`$pushAll` pushes doc array', function () {
     var update = {'$pushAll': {foo: ['zemba', 'fleiba']}}
       , doc = {foo: ['bar'], hey: 'joe'}
@@ -90,6 +122,14 @@ testosterone
       , ret = UpdateDocument({document: doc, update: update});
 
     assert.deepEqual(ret, {foo: {bar: ['bar', 'zemba', 'fleiba']}});
+  })
+
+  .add('`$pushAll` pushes doc array using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$pushAll': {'foo.bar': ['zemba', 'fleiba']}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {foo: {bar: ['zemba', 'fleiba']}});
   })
 
   .add('`$addToSet` pushes doc value if not present', function () {
@@ -109,6 +149,16 @@ testosterone
         , ret = UpdateDocument({document: doc, update: update});
 
       assert.deepEqual(ret, {foo: {bar: ['bar', 'zemba']}});
+    });
+  })
+
+  .add('`$addToSet` pushes doc value if not present using `dot_notation` on `inexistant` elements', function () {
+    [0, 1].forEach(function () {
+      var update = {'$addToSet': {'foo.bar': 'zemba'}}
+        , doc = {}
+        , ret = UpdateDocument({document: doc, update: update});
+
+      assert.deepEqual(ret, {foo: {bar: ['zemba']}});
     });
   })
 
@@ -140,6 +190,14 @@ testosterone
     assert.deepEqual(ret, {foo: {bar: ['zemba', 'fleiba']}});
   })
 
+  .add('`$pop` pops array element using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$pop': {'foo.bar': 1}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {});
+  })
+
   .add('`$pull` removes array elements matchin a value', function () {
     var update = {'$pull': {foo: 'zemba'}}
       , doc = {foo: ['bar', 'zemba', 'zemba', 'fleiba'], hey: 'joe'}
@@ -154,6 +212,14 @@ testosterone
       , ret = UpdateDocument({document: doc, update: update});
 
     assert.deepEqual(ret, {foo: {bar: ['bar', 'fleiba']}});
+  })
+
+  .add('`$pull` removes array elements matchin a value using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$pull': {'foo.bar': 'zemba'}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {});
   })
 
   .add('`$pullAll` removes array elements in a array', function () {
@@ -172,6 +238,14 @@ testosterone
     assert.deepEqual(ret, {foo: {bar: ['bar']}});
   })
 
+  .add('`$pullAll` removes array elements in a array using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$pullAll': {'foo.bar': ['fleiba', 'zemba']}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {});
+  })
+
   .add('`$rename` renames a field', function () {
     var update = {'$rename': {foo: 'bar'}}
       , doc = {foo: 'foo', hey: 'joe'}
@@ -186,6 +260,14 @@ testosterone
       , ret = UpdateDocument({document: doc, update: update});
 
     assert.deepEqual(ret, {foo: {far: 'foo'}});
+  })
+
+  .add('`$rename` renames a field using `dot_notation` on `inexistant` elements', function () {
+    var update = {'$rename': {'foo.bar': 'far'}}
+      , doc = {}
+      , ret = UpdateDocument({document: doc, update: update});
+
+    assert.deepEqual(ret, {});
   })
 
   .run();
