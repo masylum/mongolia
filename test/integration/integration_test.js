@@ -79,9 +79,7 @@ db.open(function (error) {
             Country = Model(db, 'countries');
 
         Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
-          User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error, ret) {
-            assert.equal(ret, 1);
-
+          User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error) {
             User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
               assert.equal(doc.country.name, 'France');
               assert.equal(doc.country.iso.id, '123');
@@ -95,15 +93,18 @@ db.open(function (error) {
             funk = require('funk')(),
             query = {name: 'zemba'};
 
-        User.pushEmbeddedDocument(query, 'comments', {body: 'bla bla bla'}, {}, funk.add(function (error, ret) {
-          assert.equal(ret, 1);
-        }));
+        User.pushEmbeddedDocument(query, 'comments', {body: 'bla bla bla'}, {}, funk.nothing());
+        User.pushEmbeddedDocument(query, 'comments', {body: 'trolling bla'}, {}, funk.nothing());
 
-        User.pushEmbeddedDocument(query, 'comments', {body: 'trolling bla'}, {}, funk.add(function (error, ret) {
-          assert.equal(ret, 1);
-        }));
-
-        funk.parallel(done);
+        funk.parallel(function () {
+          User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
+            assert.deepEqual(doc.comments, [
+              {body: 'bla bla bla'}
+            , {body: 'trolling bla'}
+            ]);
+            done();
+          }));
+        });
       })
 
       .add('`findAndModify` documents with `before/afterUpdate` hooks', function (done) {
