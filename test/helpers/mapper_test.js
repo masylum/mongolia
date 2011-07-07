@@ -1,13 +1,13 @@
 var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/mapper_test.js'}),
     assert = testosterone.assert,
-    Namespacer = require('./../../lib/helpers/mapper');
+    Mapper = require('./../../lib/helpers/mapper');
 
 testosterone
   .before(function () {
   })
 
   .add('`filterUpdate` should filter documents before being inserted or updated', function () {
-    var test = Namespacer.filterUpdate
+    var test = Mapper.filterUpdate
       , arg
       , toUpper = function (val) {
           return val.toUpperCase();
