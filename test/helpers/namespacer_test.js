@@ -17,6 +17,27 @@ testosterone
     assert.deepEqual(test(namespaces, 'modern'), ['mile.davis', 'coltrane', 'cohen', 'corea']);
   })
 
+  .add('`addFieldFindOne` adds `fields` to findOne method if using a namespace', function () {
+    var test = Namespacer.addFieldFindOne
+      , args
+      , cb = function () {}
+      , fields = {fields: {zemba: 1, fleiba: 1, 'nested.attribute': 1}}
+      , visibility = ['nested.attribute', 'zemba', 'fleiba'];
+
+    args = [{_id: 1}, cb];
+    test(visibility, args);
+    assert.deepEqual(args[1], fields);
+
+    args = [{_id: 1}, {timeout: 1}, cb];
+    test(visibility, args);
+    assert.deepEqual(args[1].fields, fields.fields);
+    assert.deepEqual(args[1].timeout, 1);
+
+    args = [{_id: 1}, {fields: {zemba: -1}}, cb];
+    test(visibility, args);
+    assert.deepEqual(args[1], fields);
+  })
+
   .add('`addFieldFind` adds `fields` to find methods if using a namespace', function () {
     var test = Namespacer.addFieldFind
       , args
