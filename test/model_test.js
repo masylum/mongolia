@@ -184,11 +184,18 @@ testosterone
   })
 
   .add('`validateAndUpdate` when the model is invalid does not update it', function () {
-    var document = {foo: 'bar'},
-        update = {fleiba: 'zemba'},
-        validator = _mock_validator(true),
-        options = {},
-        callback;
+    var query = {foo: 'bar'}
+      , document = {foo: 'bar', fleiba: 'foo'}
+      , update = {fleiba: 'zemba'}
+      , validator = _mock_validator(true)
+      , options = {}
+      , callback;
+
+    gently.expect(User, 'mongo', function (_method, _query, _callback) {
+      assert.equal(_method, 'findOne');
+      assert.deepEqual(_query, query);
+      _callback(null, document);
+    });
 
     gently.expect(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
@@ -199,15 +206,22 @@ testosterone
       assert.deepEqual(_validator, validator);
     });
 
-    User.validateAndUpdate(document, update, options, callback);
+    User.validateAndUpdate(query, update, options, callback);
   })
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
-    var document = {name: 'zemba', email: 'zemba@foobar.com'},
-        update = {'$set': {name: 'John'}},
-        validator = _mock_validator(false),
-        options = {},
-        callback;
+    var query = {foo: 'bar'}
+      , document = {foo: 'bar', fleiba: 'foo'}
+      , update = {'$set': {fleiba: 'John'}}
+      , validator = _mock_validator(false)
+      , options = {}
+      , callback;
+
+    gently.expect(User, 'mongo', function (_method, _query, _callback) {
+      assert.equal(_method, 'findOne');
+      assert.deepEqual(_query, query);
+      _callback(null, document);
+    });
 
     User.beforeUpdate = function (_query, _update, _callback) {
       _callback(null, document);
@@ -228,7 +242,7 @@ testosterone
       assert.deepEqual(_validator, validator);
     });
 
-    User.validateAndUpdate(document, update, options, callback);
+    User.validateAndUpdate(query, update, options, callback);
   })
 
   .add('`getEmbeddedDocument` filters the document following the skeletons directive', function () {

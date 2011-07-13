@@ -261,14 +261,15 @@ db.open(function (error) {
           callback(null, validator);
         };
 
-        User.validateAndUpdate({name: 'John Smith'}, {name: 'foobar'}, done(function (error, validation) {
+        User.validateAndUpdate({name: 'John Smith'}, {'$set': {name: 'foobar'}}, function (error, validation) {
           assert.deepEqual(validation.errors.name, ['We only love Zemba here']);
           assert.deepEqual(validation.updated_document.name, 'John Smith');
 
-          User.validateAndUpdate({name: 'John Smith'}, {name: 'zemba'}, function (error, validation) {
+          User.validateAndUpdate({name: 'John Smith'}, {'$set': {name: 'zemba'}}, function (error, validation) {
             assert.deepEqual(validation.errors, {});
+            done();
           });
-        }));
+        });
       })
 
       .run();
