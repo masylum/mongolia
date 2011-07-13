@@ -125,7 +125,7 @@ Secure your data access defining visibility namespaces.
 You can namespace a call to the database by appending `:namespace` on
 your proxied method.
 
-If called withot a namespace, the method will work ignoring the `namespace` directives.
+If called without a namespace, the method will work ignoring the `namespace` directives.
 
 You can `extend` other namespaces and `add` or `remove` some data visibility.
 
@@ -147,8 +147,8 @@ USER.namespaces = {
 USER.mongo('insert:public', {account: {email: 'foo@bar.com'}, password: 'fleiba', credit_card_number: 123, is_active: true});
 // insert => {account: {email: 'foo@bar.com'}}
 
-USER.mongo('update:private', {'$set': {'account.email': 'foo@bar.com', 'account.phone': '123123', credit_card_number: 999, password: 'zemba'});
-// updates => {'$set': {'account.email': 'foo@bar.com', password: 'zemba'}}
+USER.validateAndUpdate({account: {email: 'foo@bar.com'}}, {'$set': {'account.email': 'super@mail.com', password: '123'}, {namespace: 'public'});
+// updates => {'$set': {'account.email': 'super@mail.com'}}
 
 USER.mongo('findArray:public', {account: {email: 'foo@bar.com'}});
 // find => {account: {email: 'foo@bar.com', name: 'paco'}}
@@ -157,7 +157,7 @@ USER.mongo('findArray:accounting', {account: {email: 'foo@bar.com'}});
 // find => {account: {email: 'foo@bar.com', name: 'paco'}, password: 'fleiba', credit_card_number: 123}
 ```
 
-Use this feature wisely to filter users data coming from forms.
+Use this feature wisely to filter data coming from forms.
 
 ## Embedded documents
 
@@ -244,6 +244,8 @@ Mongolia provides two methods that allow you to create and update using the `val
 Model.validateAndInsert(document[, options, callback(error, validator)]);
 Model.validateAndUpdate(document, update[, options, callback(error, validator)]);
 ```
+
+To scope the insert/update within a namespace, use `options.namespace`.
 
 In order to validate an insertion/update, the model have to implement a `validate` function on your model.
 
