@@ -5,16 +5,23 @@ var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mong
     Collection = require('mongodb/lib/mongodb/collection').Collection.prototype,
     Model;
 
+function _stubGetCollection() {
+  gently.expect(Model, 'getCollection', function (_callback) {
+    _callback(null, Collection);
+  });
+}
+
 testosterone
   .before(function () {
-    Model = {};
+    Model = require('../../').model({}, 'models');
   })
 
   .add('`proxy` delegates every call to collection_proxy or native driver collection functions', function () {
-    var cb = function () {},
+    var cb = function cb() {},
         args = ['zemba', cb];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
+      _stubGetCollection();
       gently.expect(CollectionProxy, method, function (_model, _collection, _args, _callback) {
         assert.equal(Model, _model);
         assert.equal(Collection, _collection);
@@ -22,20 +29,21 @@ testosterone
         assert.equal(cb, _callback);
       });
 
-      CollectionProxy.proxy(Model, method, undefined, Collection, args, cb);
+      CollectionProxy.proxy(Model, {method: method, hooks: true}, args, cb);
     });
 
-    ['find', 'foo'].forEach(function (method) {
+    ['find', 'foo', 'update', 'insert', 'findArray'].forEach(function (method) {
+      _stubGetCollection();
       gently.expect(Collection, method, function (_arg, _callback) {
         assert.equal(_arg, args[0]);
         assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(Model, method, undefined, Collection, args, cb);
+      CollectionProxy.proxy(Model, {method: method, hooks: false}, args, cb);
     });
   })
 
-  .add('`proxy` modifies the arguments according to `namespaces`', function () {
+  .add('`proxy` modifies the arguments according to `namespaces` unless the `namespacing` option is set to `false`', function () {
     var cb = function () {},
         args = [{foo: 'bar'}, cb];
 
@@ -43,6 +51,8 @@ testosterone
       foo: ['zemba', 'fleiba']
     };
 
+    // namespacing: true
+    _stubGetCollection();
     gently.expect(CollectionProxy.namespacer, 'filter', function (_namespaces, _namespace, _fn, _args) {
       assert.deepEqual(_namespaces, Model.namespaces);
       assert.deepEqual(_namespace, 'foo');
@@ -55,19 +65,27 @@ testosterone
       assert.deepEqual(_callback, args[1]);
     });
 
-    CollectionProxy.proxy(Model, 'find', 'foo', Collection, args, cb);
+    CollectionProxy.proxy(Model, {method: 'find', namespace: 'foo', namespacing: true}, args, cb);
+
+    // namespacing: false
+    _stubGetCollection();
+    gently.expect(Collection, 'find', function (_arg, _callback) {
+      assert.equal(_arg, args[0]);
+      assert.deepEqual(_callback, args[1]);
+    });
+
+    CollectionProxy.proxy(Model, {method: 'find', namespace: 'foo', namespacing: false}, args, cb);
   })
 
-  .add('`proxy` maps the arguments according to `maps`', function () {
+  .add('`proxy` maps the arguments according to `maps` unless the `mapping` option is set to `false`', function () {
     var cb = function () {},
-        args = [{foo: 'bar'}, cb];
+        args = [{foo: 'bar', _id: '3'}, cb];
 
-    Model.maps = {
-      foo: Boolean
-    };
+    Model.maps = {foo: Boolean};
 
+    _stubGetCollection();
     gently.expect(CollectionProxy.mapper, 'map', function (_maps, _fn, _args) {
-      assert.deepEqual(_maps, Model.maps);
+      assert.deepEqual(_maps, {foo: Boolean});
       assert.equal(_fn, 'find');
       assert.deepEqual(_args, args);
     });
@@ -77,13 +95,22 @@ testosterone
       assert.deepEqual(_callback, args[1]);
     });
 
-    CollectionProxy.proxy(Model, 'find', undefined, Collection, args, cb);
+    CollectionProxy.proxy(Model, {method: 'find', mapping: true}, args, cb);
+
+    _stubGetCollection();
+    gently.expect(Collection, 'find', function (_arg, _callback) {
+      assert.equal(_arg, args[0]);
+      assert.deepEqual(_callback, args[1]);
+    });
+
+    CollectionProxy.proxy(Model, {method: 'find', mapping: false}, args, cb);
   })
 
   .add('`proxy` can be called with no callback', function () {
     var args = ['zemba'];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
+      _stubGetCollection();
       gently.expect(CollectionProxy, method, function (_model, _collection, _args, _callback) {
         assert.equal(_model, Model);
         assert.equal(_collection, Collection);
@@ -91,16 +118,17 @@ testosterone
         assert.equal(typeof _callback, 'function');
       });
 
-      CollectionProxy.proxy(Model, method, undefined, Collection, args);
+      CollectionProxy.proxy(Model, {method: method, hooks: true}, args);
     });
 
-    ['find', 'foo'].forEach(function (method) {
+    ['find', 'foo', 'update', 'insert', 'findArray'].forEach(function (method) {
+      _stubGetCollection();
       gently.expect(Collection, method, function (_arg, _callback) {
         assert.equal(_arg, args[0]);
         assert.deepEqual(_callback, args[1]);
       });
 
-      CollectionProxy.proxy(Model, method, undefined, Collection, args);
+      CollectionProxy.proxy(Model, {method: method, hooks: false}, args);
     });
   })
 

@@ -33,11 +33,26 @@ Models don't map data from the db, they just define the logic.
 var USER = require('mongolia').model(db, 'users');
 ```
 
-## mongo commands
+## mongo proxied collection commands
 
-Calls to the db are done using the function `mongo`.
-Mongolia proxies all the `collection` methods defiend on the driver plus some custom methods.
+Calls to the db are done using the method `mongo`.
+`mongo` proxies all the `collection` methods defined on the driver plus some custom methods.
 
+This allows mongolia to extend the driver with extra functionalties:
+
+  * Namespacing: Allows you to filter the documents going and coming from the db.
+  * Mapping: Allows you to apply functions to the documents attributes going and coming from the db.
+  * Hooks: They are triggered before and after a call is done.
+
+The default usage is:
+
+`mongo('method[:namespace]', args)`
+
+If you want to disable any functionality you can by doing:
+
+`mongo({method: method[, namespace: namespace, namespacing: false, mapping: false, hooks: false])`
+
+Example:
 ``` javascript
 var Db = require('mongodb/lib/mongodb/db').Db,
     Server = require('mongodb/lib/mongodb/connection').Server,
@@ -46,9 +61,8 @@ var Db = require('mongodb/lib/mongodb/db').Db,
 db.open(function () {
   var User = require('./user.js')(db);
 
-  User.mongo('findOne', {name: 'foo'}, function (error, user) {
-    console.log(user);
-  });
+  User.mongo('findOne', {name: 'foo'}, console.log);
+  User.mongo({method: 'insert', hooks: false}, {name: 'foo'}, console.log);
 });
 ```
 
@@ -56,7 +70,7 @@ All the `collection` methods from the driver are supported.
 
 If you need more information visit the [driver](http://github.com/christkv/node-mongodb-native) documentation
 
-## Custom mongo collection commands
+### Custom mongo collection commands
 
 Mongolia provides some useful commands that are not available using the driver.
 
@@ -64,61 +78,7 @@ Mongolia provides some useful commands that are not available using the driver.
   * `mapReduceArray`: mapReduce that returns an array with the results.
   * `mapReduceCursor`: mapReduce that returns a cursor.
 
-## Hooks
-
-Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
-
-  * `beforeInsert(documents, callback)`: triggered *before* an `insert`.
-  * `afterInsert(documents, callback)`: triggered *after* an `insert.
-
-  * `beforeUpdate(query, update, callback)`: triggered *before* an `update` or `findAndModify` command.
-  * `afterUpdate(query, update, callback)`: triggered *after* an `update` or `findAndModify` command.
-
-  * `beforeRemove(query, callback)`: triggered *before* a `remove` command.
-  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
-
-Example:
-
-``` javascript
-var COMMENT = require('mongolia').model(db, 'comments'),
-    Post = require('./post');
-
-COMMENT.beforeInsert = function (documents, callback) {
-  documents.forEach(function (doc) {
-    doc.created_at = new Date();
-  });
-  callback(null, documents);
-};
-
-COMMENT.atferInsert = function (documents, callback) {
-  Post(db).mongo('update', {_id: documents[0].post._id}, {'$inc': {num_posts: 1}}, callback);
-};
-```
-
-## Mappings and type casting
-
-Mongolia `maps` allows you to cast the data before is stored to the database.
-Mongolia will apply the specified function for each attribute on the `maps` object.
-
-``` javascript
-var USER = require('mongolia').model(db, 'users');
-
-USER.maps = {
-  _id: ObjectID,
-  account: {
-    email: String,
-    name: function (val) {val.toUpperCase()}
-  },
-  password: String,
-  salt: String,
-  is_deleted: Boolean
-};
-
-USER.mongo('insert', {email: 'foo@bar.com', password: 123, name: 'john', is_deleted: 'true'});
-// stored => {password: '123', name: 'JOHN', is_deleted: true}
-```
-
-## Namespacing
+### Namespacing
 
 Secure your data access defining visibility namespaces.
 
@@ -158,6 +118,69 @@ USER.mongo('findArray:accounting', {account: {email: 'foo@bar.com'}});
 ```
 
 Use this feature wisely to filter data coming from forms.
+
+### Mappings and type casting
+
+Mongolia `maps` allows you to cast the data before is stored to the database.
+Mongolia will apply the specified function for each attribute on the `maps` object.
+
+By default we provide the map `_id -> ObjectId`, so you don't need to cast it.
+
+``` javascript
+var USER = require('mongolia').model(db, 'users');
+
+USER.maps = {
+  _id: ObjectID,
+  account: {
+    email: String,
+    name: function (val) {val.toUpperCase()}
+  },
+  password: String,
+  salt: String,
+  is_deleted: Boolean
+};
+
+USER.mongo('insert', {email: 'foo@bar.com', password: 123, name: 'john', is_deleted: 'true'});
+// stored => {password: '123', name: 'JOHN', is_deleted: true}
+```
+
+### Hooks
+
+Mongolia let you define some hooks on your models that will be triggered after a mongoDB command.
+
+  * `beforeInsert(documents, callback)`: triggered *before* an `insert`.
+  * `afterInsert(documents, callback)`: triggered *after* an `insert.
+
+  * `beforeUpdate(query, update, callback)`: triggered *before* an `update` or `findAndModify` command.
+  * `afterUpdate(query, update, callback)`: triggered *after* an `update` or `findAndModify` command.
+
+  * `beforeRemove(query, callback)`: triggered *before* a `remove` command.
+  * `afterRemove(query, callback)`: triggered *after* a `remove` command.
+
+Example:
+
+``` javascript
+var COMMENT = require('mongolia').model(db, 'comments'),
+    Post = require('./post');
+
+COMMENT.beforeInsert = function (documents, callback) {
+  documents.forEach(function (doc) {
+    doc.created_at = new Date();
+  });
+  callback(null, documents);
+};
+
+COMMENT.atferInsert = function (documents, callback) {
+  documents.forEach(function (doc) {
+    Post(db).mongo('update', {_id: doc.post._id}, {'$inc': {num_posts: 1}}); // fire and forget
+  });
+  callback(null, documents);
+};
+
+USER.mongo('insert', {email: 'foo@bar.com'});
+// stored => {email: 'foo@bar.com', created_at: Thu, 14 Jul 2011 12:13:39 GMT}
+// Post#num_posts is increased
+```
 
 ## Embedded documents
 
@@ -429,6 +452,20 @@ var User = function (db) {
   return USER;
 };
 ```
+
+## Tests
+
+Mongolia is fully tested using [testosterone](http://github.com/masylum/testosterone)
+To run the tests use:
+
+```bash
+make
+```
+
+## Example
+
+Monoglia has a fully working blog example on the `example` folder.
+
 ## Contributors
 
 In no specific order.

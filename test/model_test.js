@@ -4,7 +4,7 @@ var testosterone = require('testosterone')({sync: true, title: 'mongolia/model.j
 
     Model = require('./../lib/model'),
 
-    _db = {},
+    _db = {bson_serializer: {}},
     _mock_validator = function (ret) {
       return {
         hasErrors: function () {
@@ -44,18 +44,11 @@ testosterone
   })
 
   .add('`mongo` proxies collection calls', function () {
-    var callback = function (error, doc) {},
-        query = {name: 'zemba'},
-        collection = {collectionName: 'users'};
+    var callback = function (error, doc) {}
+      , query = {name: 'zemba'};
 
-    gently.expect(_db, 'collection', function (_collection_name, _callback) {
-      _callback(null, collection);
-    });
-
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
-      assert.equal(_fn, 'findArray');
-      assert.deepEqual(_namespace, undefined);
-      assert.deepEqual(_collection, collection);
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+      assert.deepEqual(_options, {hooks: true, namespacing: true, mapping: true, method: 'findArray'});
       assert.deepEqual(_args[0], query);
       assert.equal(_callback, callback);
     });
@@ -64,18 +57,17 @@ testosterone
   })
 
   .add('`mongo` proxies namespaced collection calls', function () {
-    var callback = function (error, doc) {},
-        query = {name: 'zemba'},
-        collection = {collectionName: 'users'};
+    var callback = function (error, doc) {}
+      , query = {name: 'zemba'};
 
-    gently.expect(_db, 'collection', function (_collection_name, _callback) {
-      _callback(null, collection);
-    });
-
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
-      assert.equal(_fn, 'findArray');
-      assert.deepEqual(_namespace, 'public');
-      assert.deepEqual(_collection, collection);
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+      assert.deepEqual(_options, {
+        hooks: true
+      , namespacing: true
+      , mapping: true
+      , method: 'findArray'
+      , namespace: 'public'
+      });
       assert.deepEqual(_args[0], query);
       assert.equal(_callback, callback);
     });
@@ -83,18 +75,35 @@ testosterone
     User.mongo('findArray:public', query, callback);
   })
 
-  .add('`mongo` can be called without a callback', function () {
-    var query = {name: 'zemba'},
-        collection = {collectionName: 'users'};
+  .add('`mongo` proxies with options', function () {
+    var callback = function (error, doc) {}
+      , query = {name: 'zemba'};
 
-    gently.expect(_db, 'collection', function (_collection_name, _callback) {
-      _callback(null, collection);
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+      assert.deepEqual(_options, {
+        hooks: false
+      , namespacing: true
+      , mapping: true
+      , method: 'findArray'
+      , namespace: 'public'
+      });
+      assert.deepEqual(_args[0], query);
+      assert.equal(_callback, callback);
     });
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _fn, _namespace, _collection, _args, _callback) {
-      assert.equal(_fn, 'findArray');
-      assert.deepEqual(_namespace, undefined);
-      assert.deepEqual(_collection, collection);
+    User.mongo({method: 'findArray', namespace: 'public', hooks: false}, query, callback);
+  })
+
+  .add('`mongo` can be called without a callback', function () {
+    var query = {name: 'zemba'};
+
+    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+      assert.deepEqual(_options, {
+        hooks: true
+      , namespacing: true
+      , mapping: true
+      , method: 'findArray'
+      });
       assert.deepEqual(_args[0], query);
       assert.equal(typeof _callback, 'function');
     });
@@ -211,7 +220,7 @@ testosterone
 
   .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
     var query = {foo: 'bar'}
-      , document = {foo: 'bar', fleiba: 'foo'}
+      , document = {_id: '123', foo: 'bar'}
       , update = {'$set': {fleiba: 'John'}}
       , validator = _mock_validator(false)
       , options = {}
@@ -233,7 +242,9 @@ testosterone
 
     gently.expect(User, 'mongo', function (_action, _document, _update, _options, _callback) {
       assert.equal(_action, 'update');
+      assert.deepEqual(_document._id, document._id);
       assert.deepEqual(_update, update);
+      assert.deepEqual(_options, options);
       _callback(null, _document);
     });
 
@@ -318,22 +329,18 @@ testosterone
 
   .add('`updateEmbeddedDocument` updates embedded objects', function () {
     var embeddedDocument = {name: 'john', surname: 'snow', bo: 'vale'},
-        options = {},
-        collection = {foo: 'bar'},
+        options = {upsert: true},
         callback = function () {};
 
     User.skeletons = {
       author: ['_id', 'name', 'surname']
     };
 
-    gently.expect(User, 'getCollection', function (_callback) {
-      _callback(null, collection);
-    });
-
-    gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
+    gently.expect(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
+      assert.deepEqual(_opts, {method: 'update', hooks: false});
       assert.deepEqual(_query, {'author._id': 1});
       assert.deepEqual(_update, {'$set': {'author.name': 'john', 'author.surname': 'snow'}});
-      assert.equal(_options, options);
+      assert.deepEqual(_options, {upsert: true, multi: true});
       assert.equal(_callback, callback);
     });
 
@@ -352,14 +359,11 @@ testosterone
       return embeddedDocument;
     });
 
-    gently.expect(User, 'getCollection', function (_callback) {
-      _callback(null, collection);
-    });
-
-    gently.expect(collection, 'update', function (_query, _update, _options, _callback) {
+    gently.expect(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
+      assert.deepEqual(_opts, {method: 'update', hooks: false});
       assert.deepEqual(_query, {_id: 1});
       assert.deepEqual(_update, {'$push': {author: embeddedDocument}});
-      assert.deepEqual(_options, {upsert: true, multi: true});
+      assert.deepEqual(_options, {upsert: false, multi: true});
     });
 
     User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument);
