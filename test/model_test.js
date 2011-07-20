@@ -105,6 +105,7 @@ testosterone
       , method: 'findArray'
       });
       assert.deepEqual(_args[0], query);
+      assert.equal(typeof _args[_args.length - 1], 'function');
       assert.equal(typeof _callback, 'function');
     });
 
