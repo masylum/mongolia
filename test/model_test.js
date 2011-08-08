@@ -150,16 +150,23 @@ testosterone
   })
 
   .add('`validateAndInsert` when the model is valid inserts it afterwards', function () {
-    var document = {},
+    var document = {foo: 'bar'},
         validator = _mock_validator(false),
         callback;
+
+    User.maps = {
+      foo: function (el) {
+        return el.toUpperCase();
+      }
+    };
 
     gently.expect(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
     });
 
     gently.expect(User, 'mongo', function (_action, _document, _callback) {
-      assert.equal(_action, 'insert');
+      assert.deepEqual(_action, {method: 'insert', namespacing: false, mapping: false});
+      assert.deepEqual(_document.foo, 'BAR');
       _callback(null, _document);
     });
 
@@ -227,6 +234,12 @@ testosterone
       , options = {}
       , callback;
 
+    User.maps = {
+      fleiba: function (el) {
+        return el.toLowerCase();
+      }
+    };
+
     gently.expect(User, 'mongo', function (_method, _query, _callback) {
       assert.equal(_method, 'findOne');
       assert.deepEqual(_query, query);
@@ -242,9 +255,9 @@ testosterone
     });
 
     gently.expect(User, 'mongo', function (_action, _document, _update, _options, _callback) {
-      assert.equal(_action, 'update');
+      assert.deepEqual(_action, {method: 'update', namespacing: false, mapping: false});
       assert.deepEqual(_document._id, document._id);
-      assert.deepEqual(_update, update);
+      assert.deepEqual(_update.$set.fleiba, 'john');
       assert.deepEqual(_options, options);
       _callback(null, _document);
     });

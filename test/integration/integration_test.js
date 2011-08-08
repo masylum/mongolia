@@ -78,13 +78,7 @@ db.open(function (error) {
         var User = Model(db, 'users'),
             Country = Model(db, 'countries');
 
-        Country.maps = {
-          name: function capitalize(val) {
-                  return val.charAt(0).toUpperCase() + val.slice(1);
-                }
-        };
-
-        Country.mongo('findOne', {name: 'andorra'}, function (error, doc) {
+        Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
           User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error) {
             User.mongo('findOne', {name: 'zemba'}, done(function (error, doc) {
               assert.equal(doc.country.name, 'France');
