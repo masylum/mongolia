@@ -1,7 +1,5 @@
 /*globals describe, beforeEach, it*/
 var assert = require('assert')
-  , gently = global.GENTLY = new (require('gently'))()
-
   , Validator = require('./../lib/validator');
 
 describe('validators', function () {

@@ -232,7 +232,7 @@ describe('Integration test', function () {
     var User = Model(db, 'users');
 
     User.validate = function (document, update, callback) {
-      var validator = require('./../../lib/validator')(document, update);
+      var validator = require('./../lib/validator')(document, update);
 
       if (update.name !== 'zemba') {
         validator.addError('name', 'We only love Zemba here');
@@ -259,7 +259,7 @@ describe('Integration test', function () {
     User.mongo('insert', {name: 'John Smith', age: 30}, function (errors, documents) {});
 
     User.validate = function (document, update, callback) {
-      var validator = require('./../../lib/validator')(document, update);
+      var validator = require('./../lib/validator')(document, update);
 
       if (validator.updated_document.name !== 'zemba') {
         validator.addError('name', 'We only love Zemba here');

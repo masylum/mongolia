@@ -455,7 +455,7 @@ var User = function (db) {
 
 ## Tests
 
-Mongolia is fully tested using [testosterone](http://github.com/masylum/testosterone)
+Mongolia is fully tested using [mocha](http://github.com/visionmedia/mocha)
 To run the tests use:
 
 ```bash

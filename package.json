@@ -17,7 +17,7 @@
   "devDependencies": {
     "mocha": "*",
     "testosterone": "1.2.0",
-    "gently": "git://github.com/masylum/node-gently.git"
+    "sinon": "1.3.4"
   },
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.4.0" }

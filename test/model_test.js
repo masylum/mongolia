@@ -1,10 +1,10 @@
 /*globals describe, beforeEach, it*/
 var assert = require('assert')
-  , gently = global.GENTLY = new (require('gently'))()
-
+  , sinon = require('sinon')
   , Model = require('./../lib/model')
+  , Validator = require('./../lib/validator')
 
-  , _db = {bson_serializer: {}}
+  , _db = {bson_serializer: {}, collection: function () {}}
   , _mock_validator = function (ret) {
       return {
         hasErrors: function () {
@@ -32,35 +32,37 @@ describe('Models', function () {
     }, 'You must specify a collection name');
   });
 
-  it('`getCollection` returns a document collection', function () {
-    var cb = function (error, collection) {};
+  it('`getCollection` returns a document collection', sinon.test(function () {
+    var cb = function () {}
+      , stub, self = this;
 
-    gently.expect(_db, 'collection', function (_collection_name, _callback) {
-      assert.equal(_collection_name, 'users');
-      assert.equal(_callback, cb);
-    });
+    stub = self.stub(_db, 'collection').withArgs('users', cb);
 
     User.getCollection(cb);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`mongo` proxies collection calls', function () {
+  it('`mongo` proxies collection calls', sinon.test(function () {
     var callback = function (error, doc) {}
+      , stub, self = this
       , query = {name: 'zemba'};
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
       assert.deepEqual(_options, {hooks: true, namespacing: true, mapping: true, method: 'findArray'});
       assert.deepEqual(_args[0], query);
       assert.equal(_callback, callback);
     });
 
     User.mongo('findArray', query, callback);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`mongo` proxies namespaced collection calls', function () {
+  it('`mongo` proxies namespaced collection calls', sinon.test(function () {
     var callback = function (error, doc) {}
+      , stub, self = this
       , query = {name: 'zemba'};
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
       assert.deepEqual(_options, {
         hooks: true
       , namespacing: true
@@ -73,13 +75,15 @@ describe('Models', function () {
     });
 
     User.mongo('findArray:public', query, callback);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`mongo` proxies with options', function () {
+  it('`mongo` proxies with options', sinon.test(function () {
     var callback = function (error, doc) {}
+      , stub, self = this
       , query = {name: 'zemba'};
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
       assert.deepEqual(_options, {
         hooks: false
       , namespacing: true
@@ -92,12 +96,14 @@ describe('Models', function () {
     });
 
     User.mongo({method: 'findArray', namespace: 'public', hooks: false}, query, callback);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`mongo` can be called without a callback', function () {
-    var query = {name: 'zemba'};
+  it('`mongo` can be called without a callback', sinon.test(function () {
+    var query = {name: 'zemba'}
+      , stub, self = this;
 
-    gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
       assert.deepEqual(_options, {
         hooks: true
       , namespacing: true
@@ -110,49 +116,45 @@ describe('Models', function () {
     });
 
     User.mongo('findArray', query);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`validate` validates a mongo document', function () {
-    var document = {},
-        update = {name: 'Pau'},
-        validator = {data: 'foo'},
-        callback;
+  it('`validate` validates a mongo document', sinon.test(function () {
+    var document = {}
+      , self = this, stub
+      , update = {name: 'Pau'}
+      , validator = {data: 'foo'}
+      , callback;
 
-    gently.hijacked['./validator'] = gently.expect(function (_document, _update) {
-      assert.deepEqual(document, _document);
-      assert.deepEqual(update, _update);
-      return validator;
-    });
-
-    callback = gently.expect(function (_error, _validator) {
-      assert.equal(_error, null);
-      assert.deepEqual(validator, validator);
-    });
+    stub = self.stub(User, 'validator').withArgs(document, update).returns(validator);
+    callback = self.spy().withArgs(null, validator);
 
     User.validate(document, update, callback);
-  });
+    sinon.assert.calledOnce(stub);
+    sinon.assert.calledOnce(callback);
+  }));
 
-  it('`validateAndInsert` when the model is invalid does not insert it', function () {
-    var document = {},
-        validator = _mock_validator(true),
-        callback;
+  it('`validateAndInsert` when the model is invalid does not insert it', sinon.test(function () {
+    var document = {}
+      , self = this, stub
+      , validator = _mock_validator(true)
+      , callback;
 
-    gently.expect(User, 'validate', function (_document, _data, _callback) {
+    stub = self.stub(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
     });
-
-    callback = gently.expect(function (_error, _validator) {
-      assert.equal(_error, null);
-      assert.deepEqual(_validator, validator);
-    });
+    callback = self.spy().withArgs(null, validator);
 
     User.validateAndInsert(document, callback);
-  });
+    sinon.assert.calledOnce(stub);
+    sinon.assert.calledOnce(callback);
+  }));
 
-  it('`validateAndInsert` when the model is valid inserts it afterwards', function () {
-    var document = {foo: 'bar'},
-        validator = _mock_validator(false),
-        callback;
+  it('`validateAndInsert` when the model is valid inserts it afterwards', sinon.test(function () {
+    var document = {foo: 'bar'}
+      , self = this, stub1, stub2
+      , validator = _mock_validator(false)
+      , callback;
 
     User.maps = {
       foo: function (el) {
@@ -160,25 +162,25 @@ describe('Models', function () {
       }
     };
 
-    gently.expect(User, 'validate', function (_document, _data, _callback) {
+    stub1 = self.stub(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
     });
 
-    gently.expect(User, 'mongo', function (_action, _document, _callback) {
+    stub2 = self.stub(User, 'mongo', function (_action, _document, _callback) {
       assert.deepEqual(_action, {method: 'insert', namespacing: false, mapping: false});
       assert.deepEqual(_document.foo, 'BAR');
       _callback(null, _document);
     });
 
-    callback = gently.expect(function (_error, _validator) {
-      assert.equal(_error, null);
-      assert.deepEqual(_validator, validator);
-    });
+    callback = self.spy().withArgs(null, validator);
 
     User.validateAndInsert(document, callback);
-  });
+    sinon.assert.calledOnce(stub1);
+    sinon.assert.calledOnce(stub2);
+    sinon.assert.calledOnce(callback);
+  }));
 
-  it('`beforeInsert` default hook sets the created_at date', function () {
+  it('`beforeInsert` default hook sets the created_at date', sinon.test(function () {
     var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
     User.beforeInsert(documents, function (_error, _documents) {
@@ -187,47 +189,47 @@ describe('Models', function () {
         assert.equal(document.created_at.constructor, (new Date()).constructor);
       });
     });
-  });
+  }));
 
-  it('`beforeUpdate` default hook updated the updated_at date', function () {
-    var query = {foo: 'bar'},
-        update = {'$set': {fleiba: 'zemba'}};
+  it('`beforeUpdate` default hook updated the updated_at date', sinon.test(function () {
+    var query = {foo: 'bar'}
+      , update = {'$set': {fleiba: 'zemba'}};
 
     User.beforeUpdate(query, update, function (error, _query, _update) {
       assert.ok(_update.$set);
       assert.ok(_update.$set.updated_at);
       assert.equal(_update.$set.updated_at.constructor, (new Date()).constructor);
     });
-  });
+  }));
 
-  it('`validateAndUpdate` when the model is invalid does not update it', function () {
+  it('`validateAndUpdate` when the model is invalid does not update it', sinon.test(function () {
     var query = {foo: 'bar'}
+      , self = this, stub1, stub2
       , document = {foo: 'bar', fleiba: 'foo'}
       , update = {fleiba: 'zemba'}
       , validator = _mock_validator(true)
       , options = {}
       , callback;
 
-    gently.expect(User, 'mongo', function (_method, _query, _callback) {
+    stub1 = self.stub(User, 'mongo', function (_method, _query, _callback) {
       assert.equal(_method, 'findOne');
       assert.deepEqual(_query, query);
       _callback(null, document);
     });
-
-    gently.expect(User, 'validate', function (_document, _data, _callback) {
+    stub2 = self.stub(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
     });
-
-    callback = gently.expect(function (_error, _validator) {
-      assert.equal(_error, null);
-      assert.deepEqual(_validator, validator);
-    });
+    callback = self.spy().withArgs(null, validator);
 
     User.validateAndUpdate(query, update, options, callback);
-  });
+    sinon.assert.calledOnce(stub1);
+    sinon.assert.calledOnce(stub2);
+    sinon.assert.calledOnce(callback);
+  }));
 
-  it('`validateAndUpdate` when the model is valid updates it afterwards', function () {
+  it('`validateAndUpdate` when the model is valid updates it afterwards', sinon.test(function () {
     var query = {foo: 'bar'}
+      , self = this, stub1, stub2, stub3
       , document = {_id: '123', foo: 'bar'}
       , update = {'$set': {fleiba: 'John'}}
       , validator = _mock_validator(false)
@@ -240,9 +242,20 @@ describe('Models', function () {
       }
     };
 
-    gently.expect(User, 'mongo', function (_method, _query, _callback) {
+    stub1 = self.stub(User, 'mongo', function (_method, _query, _callback) {
       assert.equal(_method, 'findOne');
       assert.deepEqual(_query, query);
+
+      sinon.assert.calledOnce(stub1);
+      stub1.restore();
+      stub3 = self.stub(User, 'mongo', function (_action, _document, _update, _options, _callback) {
+        assert.deepEqual(_action, {method: 'update', namespacing: false, mapping: false});
+        assert.deepEqual(_document._id, document._id);
+        assert.deepEqual(_update.$set.fleiba, 'john');
+        assert.deepEqual(_options, options);
+        _callback(null, _document);
+      });
+
       _callback(null, document);
     });
 
@@ -250,27 +263,19 @@ describe('Models', function () {
       _callback(null, document);
     };
 
-    gently.expect(User, 'validate', function (_document, _data, _callback) {
+    stub2 = self.stub(User, 'validate', function (_document, _data, _callback) {
       _callback(null, validator);
     });
 
-    gently.expect(User, 'mongo', function (_action, _document, _update, _options, _callback) {
-      assert.deepEqual(_action, {method: 'update', namespacing: false, mapping: false});
-      assert.deepEqual(_document._id, document._id);
-      assert.deepEqual(_update.$set.fleiba, 'john');
-      assert.deepEqual(_options, options);
-      _callback(null, _document);
-    });
-
-    callback = gently.expect(function (_error, _validator) {
-      assert.equal(_error, null);
-      assert.deepEqual(_validator, validator);
-    });
+    callback = self.spy().withArgs(null, validator);
 
     User.validateAndUpdate(query, update, options, callback);
-  });
+    sinon.assert.calledOnce(stub2);
+    sinon.assert.calledOnce(stub3);
+    sinon.assert.calledOnce(callback);
+  }));
 
-  it('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
+  it('`getEmbeddedDocument` filters the document following the skeletons directive', sinon.test(function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = {
@@ -279,12 +284,12 @@ describe('Models', function () {
 
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo' });
     assert.deepEqual(
-      User.getEmbeddedDocument('comment', comment, 'post.comment'),
-      {post: {comment: {_id: 1, title: 'foo'}}}
+      User.getEmbeddedDocument('comment', comment, 'post.comment')
+    , {post: {comment: {_id: 1, title: 'foo'}}}
     );
-  });
+  }));
 
-  it('`getEmbeddedDocument` filters the document following recursive skeletons directives', function () {
+  it('`getEmbeddedDocument` filters the document following recursive skeletons directives', sinon.test(function () {
     var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
 
     User.skeletons = {
@@ -293,12 +298,12 @@ describe('Models', function () {
 
     assert.deepEqual(User.getEmbeddedDocument('post', post), {_id: 1, title: 'foo', comment: {body: 'comment body!'}});
     assert.deepEqual(
-      User.getEmbeddedDocument('post', post, 'post'),
-      {post: {_id: 1, title: 'foo', comment: {body: 'comment body!'}}}
+      User.getEmbeddedDocument('post', post, 'post')
+    , {post: {_id: 1, title: 'foo', comment: {body: 'comment body!'}}}
     );
-  });
+  }));
 
-  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
+  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings', sinon.test(function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = {
@@ -311,12 +316,12 @@ describe('Models', function () {
     , {'post._id': 1, 'post.title': 'foo'}
     );
     assert.deepEqual(
-      User.getEmbeddedDocument('comment', comment, 'post.comment', true),
-      {'post.comment._id': 1, 'post.comment.title': 'foo'}
+      User.getEmbeddedDocument('comment', comment, 'post.comment', true)
+    , {'post.comment._id': 1, 'post.comment.title': 'foo'}
     );
-  });
+  }));
 
-  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings using rescursive stuff', function () {
+  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings using rescursive stuff', sinon.test(function () {
     var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
 
     User.skeletons = {
@@ -324,33 +329,34 @@ describe('Models', function () {
     };
 
     assert.deepEqual(
-      User.getEmbeddedDocument('post', post, 'user.post', true),
-      {'user.post._id': 1, 'user.post.title': 'foo', 'user.post.comment.body': 'comment body!'}
+      User.getEmbeddedDocument('post', post, 'user.post', true)
+    , {'user.post._id': 1, 'user.post.title': 'foo', 'user.post.comment.body': 'comment body!'}
     );
-  });
+  }));
 
-  it('`getEmbeddedDocument` works without specifying the skeletons', function () {
+  it('`getEmbeddedDocument` works without specifying the skeletons', sinon.test(function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = null;
 
     assert.deepEqual(User.getEmbeddedDocument('comment', comment), { _id: 1, title: 'foo', body: 'Lorem ipsum'});
     assert.deepEqual(
-      User.getEmbeddedDocument('comment', comment, 'post.comment'),
-      {post: {comment: comment}}
+      User.getEmbeddedDocument('comment', comment, 'post.comment')
+    , {post: {comment: comment}}
     );
-  });
+  }));
 
-  it('`updateEmbeddedDocument` updates embedded objects', function () {
-    var embeddedDocument = {name: 'john', surname: 'snow', bo: 'vale'},
-        options = {upsert: true},
-        callback = function () {};
+  it('`updateEmbeddedDocument` updates embedded objects', sinon.test(function () {
+    var embeddedDocument = {name: 'john', surname: 'snow', bo: 'vale'}
+      , self = this, stub
+      , options = {upsert: true}
+      , callback = function () {};
 
     User.skeletons = {
       author: ['_id', 'name', 'surname']
     };
 
-    gently.expect(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
+    stub = self.stub(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
       assert.deepEqual(_opts, {method: 'update', hooks: false});
       assert.deepEqual(_query, {'author._id': 1});
       assert.deepEqual(_update, {'$set': {'author.name': 'john', 'author.surname': 'snow'}});
@@ -359,13 +365,15 @@ describe('Models', function () {
     });
 
     User.updateEmbeddedDocument({_id: 1}, 'author', embeddedDocument, options, callback);
-  });
+    sinon.assert.calledOnce(stub);
+  }));
 
-  it('`pushEmbeddedDocument` pushes embedded objects', function () {
-    var embeddedDocument = {name: 'john'},
-        collection = {foo: 'bar'};
+  it('`pushEmbeddedDocument` pushes embedded objects', sinon.test(function () {
+    var embeddedDocument = {name: 'john'}
+      , self = this, stub1, stub2
+      , collection = {foo: 'bar'};
 
-    gently.expect(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
+    stub1 = self.stub(User, 'getEmbeddedDocument', function (_name, _doc, _scope, _dot_notation) {
       assert.equal(_name, 'author');
       assert.deepEqual(_doc, embeddedDocument);
       assert.ifError(_scope);
@@ -373,7 +381,7 @@ describe('Models', function () {
       return embeddedDocument;
     });
 
-    gently.expect(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
+    stub2 = self.stub(User, 'mongo', function (_opts, _query, _update, _options, _callback) {
       assert.deepEqual(_opts, {method: 'update', hooks: false});
       assert.deepEqual(_query, {_id: 1});
       assert.deepEqual(_update, {'$push': {author: embeddedDocument}});
@@ -381,5 +389,7 @@ describe('Models', function () {
     });
 
     User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument);
-  });
+    sinon.assert.calledOnce(stub1);
+    sinon.assert.calledOnce(stub2);
+  }));
 });
