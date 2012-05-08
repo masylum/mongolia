@@ -10,7 +10,7 @@
   "keywords": ["mongo", "mongodb", "models", "database", "db"],
   "main": "./index",
   "dependencies": {
-    "mongodb": ">=0.9.3",
+    "mongodb": "=1.0.0",
     "funk": "1.0.1",
     "underscore": "1.1.6"
   },
