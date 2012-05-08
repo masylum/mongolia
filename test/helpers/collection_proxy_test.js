@@ -1,6 +1,6 @@
 var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
     assert = testosterone.assert,
-    gently = global.GENTLY = new (require('gently')),
+    gently = global.GENTLY = new (require('gently'))(),
     CollectionProxy = require('./../../lib/helpers/collection_proxy'),
     Collection = require('mongodb/lib/mongodb/collection').Collection.prototype,
     Model;
