@@ -15,8 +15,9 @@
     "underscore": "1.1.6"
   },
   "devDependencies": {
+    "mocha": "*",
     "testosterone": "1.2.0",
-    "gently": "0.9.1"
+    "gently": "git://github.com/masylum/node-gently.git"
   },
   "repository" : {"type": "git" , "url": "http://github.com/masylum/mongolia.git" },
   "engines": { "node": ">= 0.4.0" }

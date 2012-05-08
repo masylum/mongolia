@@ -1,9 +1,9 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/mapper_test.js'}),
-    assert = testosterone.assert,
-    Mapper = require('./../../lib/helpers/mapper');
+/*global describe, it*/
+var assert = require('assert')
+  , Mapper = require('./../../lib/helpers/mapper');
 
-testosterone
-  .add('`mapDocument` should filter documents before being inserted or updated', function () {
+describe('mapper', function () {
+  it('`mapDocument` should filter documents before being inserted or updated', function () {
     var test = Mapper.mapDocument
       , arg
       , toUpper = function (val) {
@@ -52,7 +52,6 @@ testosterone
     assert.equal(typeof arg.list[0], typeof update.list[0]);
     assert.equal(typeof arg.list[1], typeof update.list[1]);
     assert.equal(typeof arg.list[2], typeof update.list[2]);
-  })
-
-  .run();
+  });
+});
 

@@ -1,38 +1,38 @@
-var testosterone = require('testosterone')({sync: true, title: 'mongolia/model.js'}),
-    assert = testosterone.assert,
-    gently = global.GENTLY = new (require('gently')),
+/*globals describe, beforeEach, it*/
+var assert = require('assert')
+  , gently = global.GENTLY = new (require('gently'))()
 
-    Model = require('./../lib/model'),
+  , Model = require('./../lib/model')
 
-    _db = {bson_serializer: {}},
-    _mock_validator = function (ret) {
+  , _db = {bson_serializer: {}}
+  , _mock_validator = function (ret) {
       return {
         hasErrors: function () {
           return ret;
         }
       };
-    },
-    User;
+    }
+  , User;
 
-testosterone
+describe('Models', function () {
 
-  .before(function () {
+  beforeEach(function () {
     User = Model(_db, 'users');
-  })
+  });
 
-  .add('`core` throws an error when there is no db', function () {
+  it('`core` throws an error when there is no db', function () {
     assert.throws(function () {
       Model(null);
     }, 'You must specify a db');
-  })
+  });
 
-  .add('`core` throws an error when collection is missing', function () {
+  it('`core` throws an error when collection is missing', function () {
     assert.throws(function () {
       Model(_db);
     }, 'You must specify a collection name');
-  })
+  });
 
-  .add('`getCollection` returns a document collection', function () {
+  it('`getCollection` returns a document collection', function () {
     var cb = function (error, collection) {};
 
     gently.expect(_db, 'collection', function (_collection_name, _callback) {
@@ -41,9 +41,9 @@ testosterone
     });
 
     User.getCollection(cb);
-  })
+  });
 
-  .add('`mongo` proxies collection calls', function () {
+  it('`mongo` proxies collection calls', function () {
     var callback = function (error, doc) {}
       , query = {name: 'zemba'};
 
@@ -54,9 +54,9 @@ testosterone
     });
 
     User.mongo('findArray', query, callback);
-  })
+  });
 
-  .add('`mongo` proxies namespaced collection calls', function () {
+  it('`mongo` proxies namespaced collection calls', function () {
     var callback = function (error, doc) {}
       , query = {name: 'zemba'};
 
@@ -73,9 +73,9 @@ testosterone
     });
 
     User.mongo('findArray:public', query, callback);
-  })
+  });
 
-  .add('`mongo` proxies with options', function () {
+  it('`mongo` proxies with options', function () {
     var callback = function (error, doc) {}
       , query = {name: 'zemba'};
 
@@ -92,9 +92,9 @@ testosterone
     });
 
     User.mongo({method: 'findArray', namespace: 'public', hooks: false}, query, callback);
-  })
+  });
 
-  .add('`mongo` can be called without a callback', function () {
+  it('`mongo` can be called without a callback', function () {
     var query = {name: 'zemba'};
 
     gently.expect(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
@@ -110,9 +110,9 @@ testosterone
     });
 
     User.mongo('findArray', query);
-  })
+  });
 
-  .add('`validate` validates a mongo document', function () {
+  it('`validate` validates a mongo document', function () {
     var document = {},
         update = {name: 'Pau'},
         validator = {data: 'foo'},
@@ -130,9 +130,9 @@ testosterone
     });
 
     User.validate(document, update, callback);
-  })
+  });
 
-  .add('`validateAndInsert` when the model is invalid does not insert it', function () {
+  it('`validateAndInsert` when the model is invalid does not insert it', function () {
     var document = {},
         validator = _mock_validator(true),
         callback;
@@ -147,9 +147,9 @@ testosterone
     });
 
     User.validateAndInsert(document, callback);
-  })
+  });
 
-  .add('`validateAndInsert` when the model is valid inserts it afterwards', function () {
+  it('`validateAndInsert` when the model is valid inserts it afterwards', function () {
     var document = {foo: 'bar'},
         validator = _mock_validator(false),
         callback;
@@ -176,9 +176,9 @@ testosterone
     });
 
     User.validateAndInsert(document, callback);
-  })
+  });
 
-  .add('`beforeInsert` default hook sets the created_at date', function () {
+  it('`beforeInsert` default hook sets the created_at date', function () {
     var documents = [{name: 'zemba'}, {foo: 'bar'}];
 
     User.beforeInsert(documents, function (_error, _documents) {
@@ -187,9 +187,9 @@ testosterone
         assert.equal(document.created_at.constructor, (new Date()).constructor);
       });
     });
-  })
+  });
 
-  .add('`beforeUpdate` default hook updated the updated_at date', function () {
+  it('`beforeUpdate` default hook updated the updated_at date', function () {
     var query = {foo: 'bar'},
         update = {'$set': {fleiba: 'zemba'}};
 
@@ -198,9 +198,9 @@ testosterone
       assert.ok(_update.$set.updated_at);
       assert.equal(_update.$set.updated_at.constructor, (new Date()).constructor);
     });
-  })
+  });
 
-  .add('`validateAndUpdate` when the model is invalid does not update it', function () {
+  it('`validateAndUpdate` when the model is invalid does not update it', function () {
     var query = {foo: 'bar'}
       , document = {foo: 'bar', fleiba: 'foo'}
       , update = {fleiba: 'zemba'}
@@ -224,9 +224,9 @@ testosterone
     });
 
     User.validateAndUpdate(query, update, options, callback);
-  })
+  });
 
-  .add('`validateAndUpdate` when the model is valid updates it afterwards', function () {
+  it('`validateAndUpdate` when the model is valid updates it afterwards', function () {
     var query = {foo: 'bar'}
       , document = {_id: '123', foo: 'bar'}
       , update = {'$set': {fleiba: 'John'}}
@@ -268,9 +268,9 @@ testosterone
     });
 
     User.validateAndUpdate(query, update, options, callback);
-  })
+  });
 
-  .add('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
+  it('`getEmbeddedDocument` filters the document following the skeletons directive', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = {
@@ -282,9 +282,9 @@ testosterone
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
       {post: {comment: {_id: 1, title: 'foo'}}}
     );
-  })
+  });
 
-  .add('`getEmbeddedDocument` filters the document following recursive skeletons directives', function () {
+  it('`getEmbeddedDocument` filters the document following recursive skeletons directives', function () {
     var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
 
     User.skeletons = {
@@ -296,9 +296,9 @@ testosterone
       User.getEmbeddedDocument('post', post, 'post'),
       {post: {_id: 1, title: 'foo', comment: {body: 'comment body!'}}}
     );
-  })
+  });
 
-  .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
+  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = {
@@ -314,9 +314,9 @@ testosterone
       User.getEmbeddedDocument('comment', comment, 'post.comment', true),
       {'post.comment._id': 1, 'post.comment.title': 'foo'}
     );
-  })
+  });
 
-  .add('`getEmbeddedDocument` returns appropiate `dot_notation` strings using rescursive stuff', function () {
+  it('`getEmbeddedDocument` returns appropiate `dot_notation` strings using rescursive stuff', function () {
     var post = {_id: 1, title: 'foo', body: 'Lorem ipsum', comment: {body: 'comment body!', created_at: Date.now()}};
 
     User.skeletons = {
@@ -327,9 +327,9 @@ testosterone
       User.getEmbeddedDocument('post', post, 'user.post', true),
       {'user.post._id': 1, 'user.post.title': 'foo', 'user.post.comment.body': 'comment body!'}
     );
-  })
+  });
 
-  .add('`getEmbeddedDocument` works without specifying the skeletons', function () {
+  it('`getEmbeddedDocument` works without specifying the skeletons', function () {
     var comment = {_id: 1, title: 'foo', body: 'Lorem ipsum'};
 
     User.skeletons = null;
@@ -339,9 +339,9 @@ testosterone
       User.getEmbeddedDocument('comment', comment, 'post.comment'),
       {post: {comment: comment}}
     );
-  })
+  });
 
-  .add('`updateEmbeddedDocument` updates embedded objects', function () {
+  it('`updateEmbeddedDocument` updates embedded objects', function () {
     var embeddedDocument = {name: 'john', surname: 'snow', bo: 'vale'},
         options = {upsert: true},
         callback = function () {};
@@ -359,9 +359,9 @@ testosterone
     });
 
     User.updateEmbeddedDocument({_id: 1}, 'author', embeddedDocument, options, callback);
-  })
+  });
 
-  .add('`pushEmbeddedDocument` pushes embedded objects', function () {
+  it('`pushEmbeddedDocument` pushes embedded objects', function () {
     var embeddedDocument = {name: 'john'},
         collection = {foo: 'bar'};
 
@@ -381,6 +381,5 @@ testosterone
     });
 
     User.pushEmbeddedDocument({_id: 1}, 'author', embeddedDocument);
-  })
-
-  .run();
+  });
+});
