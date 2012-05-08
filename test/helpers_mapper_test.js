@@ -1,6 +1,6 @@
 /*global describe, it*/
 var assert = require('assert')
-  , Mapper = require('./../../lib/helpers/mapper');
+  , Mapper = require('./../lib/helpers/mapper');
 
 describe('mapper', function () {
   it('`mapDocument` should filter documents before being inserted or updated', function () {

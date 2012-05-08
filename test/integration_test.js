@@ -1,7 +1,7 @@
 /*globals describe, it, before*/
 var assert = require('assert')
 
-  , Model = require('./../../lib/model')
+  , Model = require('./../lib/model')
   , mongodb = require('mongodb')
   , Db = mongodb.Db
   , Server = mongodb.Server

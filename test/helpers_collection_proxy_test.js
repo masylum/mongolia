@@ -1,9 +1,9 @@
-var testosterone = require('testosterone')({post: 3000, sync: true, title: 'mongolia/helpers/collection_proxy.js'}),
-    assert = testosterone.assert,
-    gently = global.GENTLY = new (require('gently'))(),
-    CollectionProxy = require('./../../lib/helpers/collection_proxy'),
-    Collection = require('mongodb/lib/mongodb/collection').Collection.prototype,
-    Model;
+/*globals describe, it, beforeEach*/
+var assert = require('assert')
+  , gently = global.GENTLY = new (require('gently'))()
+  , CollectionProxy = require('./../lib/helpers/collection_proxy')
+  , Collection = require('mongodb/lib/mongodb/collection').Collection.prototype
+  , Model;
 
 function _stubGetCollection() {
   gently.expect(Model, 'getCollection', function (_callback) {
@@ -11,12 +11,13 @@ function _stubGetCollection() {
   });
 }
 
-testosterone
-  .before(function () {
-    Model = require('../../').model({}, 'models');
-  })
+describe('collection proxy test', function () {
 
-  .add('`proxy` delegates every call to collection_proxy or native driver collection functions', function () {
+  beforeEach(function () {
+    Model = require('../').model({}, 'models');
+  });
+
+  it('`proxy` delegates every call to collection_proxy or native driver collection functions', function () {
     var cb = function cb() {},
         args = ['zemba', cb];
 
@@ -41,9 +42,9 @@ testosterone
 
       CollectionProxy.proxy(Model, {method: method, hooks: false}, args, cb);
     });
-  })
+  });
 
-  .add('`proxy` modifies the arguments according to `namespaces` unless the `namespacing` option is set to `false`', function () {
+  it('`proxy` modifies the arguments according to `namespaces` unless the `namespacing` option is set to `false`', function () {
     var cb = function () {},
         args = [{foo: 'bar'}, cb];
 
@@ -75,9 +76,9 @@ testosterone
     });
 
     CollectionProxy.proxy(Model, {method: 'find', namespace: 'foo', namespacing: false}, args, cb);
-  })
+  });
 
-  .add('`proxy` maps the arguments according to `maps` unless the `mapping` option is set to `false`', function () {
+  it('`proxy` maps the arguments according to `maps` unless the `mapping` option is set to `false`', function () {
     var cb = function () {},
         args = [{foo: 'bar', _id: '3'}, cb];
 
@@ -104,9 +105,9 @@ testosterone
     });
 
     CollectionProxy.proxy(Model, {method: 'find', mapping: false}, args, cb);
-  })
+  });
 
-  .add('`proxy` can be called with no callback', function () {
+  it('`proxy` can be called with no callback', function () {
     var args = ['zemba'];
 
     ['update', 'insert', 'findArray'].forEach(function (method) {
@@ -130,9 +131,9 @@ testosterone
 
       CollectionProxy.proxy(Model, {method: method, hooks: false}, args);
     });
-  })
+  });
 
-  .add('`findArray` calls find on a collection with some arguments', function () {
+  it('`findArray` calls find on a collection with some arguments', function () {
     var cb = function (error, cursor) {},
         cursor = {fleiba: 'zemba'},
         error_result = null,
@@ -145,9 +146,9 @@ testosterone
     });
 
     CollectionProxy.findArray(Model, Collection, args, cb);
-  })
+  });
 
-  .add('`insert` inserts a record', function () {
+  it('`insert` inserts a record', function () {
     var callback_called = false,
         cb = function (error, ret) {
           assert.deepEqual(error, null);
@@ -176,9 +177,9 @@ testosterone
     });
 
     CollectionProxy.insert(Model, Collection, args, cb);
-  })
+  });
 
-  .add('`update` finds and modifies a record', function () {
+  it('`update` finds and modifies a record', function () {
     var callback_called = false,
         cb = function (error, ret) {
           assert.deepEqual(error, null);
@@ -211,9 +212,9 @@ testosterone
     });
 
     CollectionProxy.update(Model, Collection, args, cb);
-  })
+  });
 
-  .add('`findAndModify` finds and modifies a record', function () {
+  it('`findAndModify` finds and modifies a record', function () {
     var callback_called = false,
         cb = function (error, ret) {
           assert.deepEqual(error, null);
@@ -246,9 +247,9 @@ testosterone
     });
 
     CollectionProxy.findAndModify(Model, Collection, args, cb);
-  })
+  });
 
-  .add('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
+  it('`mapReduceCursor` calls `mapReduce` returning a cursor', function () {
     var args = ['a', 'b'],
         coll = {foo: 'bar'};
 
@@ -280,9 +281,9 @@ testosterone
 
       CollectionProxy.mapReduceCursor(Model, Collection, args, cb);
     });
-  })
+  });
 
-  .add('`mapReduceArray` returns a `mapReduceCursor` to Array', function () {
+  it('`mapReduceArray` returns a `mapReduceCursor` to Array', function () {
     var cb = function () {},
         args = ['fleiba', cb],
         cursor = {};
@@ -300,9 +301,9 @@ testosterone
     });
 
     CollectionProxy.mapReduceArray(Model, Collection, args, cb);
-  })
+  });
 
-  .add('`remove` removes a document', function () {
+  it('`remove` removes a document', function () {
     var callback_called = false,
         cb = function (error, ret) {
           assert.deepEqual(error, null);
@@ -331,6 +332,5 @@ testosterone
     });
 
     CollectionProxy.remove(Model, Collection, args, cb);
-  })
-
-  .run();
+  });
+});

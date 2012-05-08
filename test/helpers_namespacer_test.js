@@ -1,6 +1,6 @@
 /*globals describe, it*/
 var assert = require('assert')
-  , Namespacer = require('./../../lib/helpers/namespacer');
+  , Namespacer = require('./../lib/helpers/namespacer');
 
 describe('namespacer', function () {
   it('`resolveNamespace` implements the whole namespace API', function () {
