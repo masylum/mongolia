@@ -128,7 +128,7 @@ describe('collection proxy test', function () {
       ['find', 'update', 'insert'].forEach(function (method) {
         stubGetCollection(self);
         stub = self.stub(Collection, method, function (args, callback) {
-          assert.equal(typeof callback, 'function');
+          assert.equal(typeof callback, 'undefined');
         });
 
         CollectionProxy.proxy(Model, {method: method, hooks: false}, args);

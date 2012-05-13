@@ -47,10 +47,10 @@ describe('Models', function () {
       , stub, self = this
       , query = {name: 'zemba'};
 
-    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args) {
       assert.deepEqual(_options, {hooks: true, namespacing: true, mapping: true, method: 'findArray'});
       assert.deepEqual(_args[0], query);
-      assert.equal(_callback, callback);
+      assert.deepEqual(_args[1], callback);
     });
 
     User.mongo('findArray', query, callback);
@@ -62,7 +62,7 @@ describe('Models', function () {
       , stub, self = this
       , query = {name: 'zemba'};
 
-    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args) {
       assert.deepEqual(_options, {
         hooks: true
       , namespacing: true
@@ -71,7 +71,7 @@ describe('Models', function () {
       , namespace: 'public'
       });
       assert.deepEqual(_args[0], query);
-      assert.equal(_callback, callback);
+      assert.deepEqual(_args[1], callback);
     });
 
     User.mongo('findArray:public', query, callback);
@@ -83,7 +83,7 @@ describe('Models', function () {
       , stub, self = this
       , query = {name: 'zemba'};
 
-    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
+    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args) {
       assert.deepEqual(_options, {
         hooks: false
       , namespacing: true
@@ -92,30 +92,10 @@ describe('Models', function () {
       , namespace: 'public'
       });
       assert.deepEqual(_args[0], query);
-      assert.equal(_callback, callback);
+      assert.deepEqual(_args[1], callback);
     });
 
     User.mongo({method: 'findArray', namespace: 'public', hooks: false}, query, callback);
-    sinon.assert.calledOnce(stub);
-  }));
-
-  it('`mongo` can be called without a callback', sinon.test(function () {
-    var query = {name: 'zemba'}
-      , stub, self = this;
-
-    stub = self.stub(User.collection_proxy, 'proxy', function (_model, _options, _args, _callback) {
-      assert.deepEqual(_options, {
-        hooks: true
-      , namespacing: true
-      , mapping: true
-      , method: 'findArray'
-      });
-      assert.deepEqual(_args[0], query);
-      assert.equal(typeof _args[_args.length - 1], 'function');
-      assert.equal(typeof _callback, 'function');
-    });
-
-    User.mongo('findArray', query);
     sinon.assert.calledOnce(stub);
   }));
 
