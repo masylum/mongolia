@@ -9,7 +9,7 @@
                                            "Y88888P'
 
 
-Mongolia is a layer that sits on top of the mongo driver and helps you dealing with your data logic.
+Mongolia is a thin layer that sits on top of the mongo native driver and helps you dealing with your data logic.
 Mongolia is not an ORM. Models contains no state, just logic.
 Mongolia contains no magic.
 
@@ -44,11 +44,11 @@ This allows mongolia to extend the driver with extra functionalties:
   * Mapping: Allows you to apply functions to the documents attributes going and coming from the db.
   * Hooks: They are triggered before and after a call is done.
 
-The default usage is:
+There are two APIs:
 
 `mongo('method[:namespace]', args)`
 
-If you want to disable any functionality you can by doing:
+ and
 
 `mongo({method: method[, namespace: namespace, namespacing: false, mapping: false, hooks: false])`
 
@@ -193,7 +193,7 @@ USER.mongo('insert', {email: 'foo@bar.com'});
 
 ## Embedded documents
 
-Mongolia helps you to _denormalize_ your mongo database.
+Mongolia helps you to _denormalize_ your mongo collections.
 
 ### getEmbeddedDocument
 
@@ -473,7 +473,7 @@ make
 
 ## Example
 
-Monoglia has a fully working blog example on the `example` folder.
+Mongolia has a fully working blog example on the `example` folder.
 
 ## Contributors
 
