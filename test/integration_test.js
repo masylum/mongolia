@@ -80,7 +80,7 @@ describe('Integration test', function () {
     var User = Model(db, 'users'),
         Country = Model(db, 'countries');
 
-    Country.mongo('findOne', {name: 'Andorra'}, function (error, doc) {
+    Country.findOne({name: 'Andorra'}, function (error, doc) {
       User.updateEmbeddedDocument({_id: doc._id}, 'country', {name: 'France'}, {}, function (error) {
         User.mongo('findOne', {name: 'zemba'}, function (error, doc) {
           assert.equal(doc.country.name, 'France');
@@ -145,7 +145,7 @@ describe('Integration test', function () {
       _callback(null, _query, _update);
     };
 
-    User.mongo('findAndModify', query, [], update, {'new': true}, function (error, doc) {
+    User.findAndModify(query, [], update, {'new': true}, function (error, doc) {
       assert.ok(calledBefore);
       assert.ok(calledAfter);
       assert.deepEqual(doc.country.name, 'Andorra');
@@ -188,7 +188,7 @@ describe('Integration test', function () {
       _callback(null, _query, _update);
     };
 
-    User.mongo('update', query, update, function (error, doc) {
+    User.update(query, update, function (error, doc) {
       assert.ok(calledBefore);
       assert.ok(calledAfter);
       User.mongo('findArray', update.$set, function (error, docs) {
@@ -218,7 +218,7 @@ describe('Integration test', function () {
       callback(null);
     };
 
-    User.mongo('remove', query, function (error, ret) {
+    User.remove(query, function (error, ret) {
       assert.ok(calledBefore);
       assert.ok(calledAfter);
       User.mongo('findArray', {}, function (error, docs) {

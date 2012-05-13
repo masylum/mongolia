@@ -66,9 +66,18 @@ db.open(function () {
 });
 ```
 
-All the `collection` methods from the driver are supported.
+All the `collection` methods from the driver are supported and have a shortcut so you can use Mongolia
+like the native driver (with the advantage of not having to ask for the collection):
 
-If you need more information visit the [driver](http://github.com/christkv/node-mongodb-native) documentation
+Example:
+``` javascript
+  User.findOne({name: 'foo'}, console.log);
+  User.insert({name: 'foo'}); // fire and forget
+});
+```
+
+If you need more information on collection methods
+visit the [driver](https://github.com/mongodb/node-mongodb-native) documentation
 
 ### Custom mongo collection commands
 
