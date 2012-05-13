@@ -1,7 +1,7 @@
 {
   "name": "mongolia",
   "description": "Layer on top of the mongodb driver to implement data logic.",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "author": "Pau Ramon <masylum@gmail.com>",
   "contributors": [
       {"name": "Pau Ramon", "email": "masylum@gmail.com"},
