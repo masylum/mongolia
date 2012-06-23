@@ -179,7 +179,7 @@ COMMENT.beforeInsert = function (documents, callback) {
   callback(null, documents);
 };
 
-COMMENT.atferInsert = function (documents, callback) {
+COMMENT.afterInsert = function (documents, callback) {
   documents.forEach(function (doc) {
     Post(db).mongo('update', {_id: doc.post._id}, {'$inc': {num_posts: 1}}); // fire and forget
   });
